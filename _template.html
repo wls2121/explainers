@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>TITLE — Explainer</title>
+<style>
+  :root { --ink:#1a1a1a; --muted:#6b6b6b; --line:#e6e6e6; --bg:#fafafa; --card:#fff; --accent:#ff694a; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:16px/1.65 ui-sans-serif,-apple-system,system-ui,sans-serif; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 48px 24px 96px; }
+  a.back { color: var(--muted); text-decoration: none; font-size: 14px; }
+  a.back:hover { color: var(--accent); }
+  h1 { font-size: 28px; margin: 18px 0 6px; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); margin: 0 0 32px; }
+  .figure { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .figure img, .figure svg, .mermaid { width: 100%; height: auto; }
+  p { max-width: 64ch; }
+  pre { background:#f1f1f1; padding:14px; border-radius:8px; overflow:auto; font-size:13px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="../index.html">&larr; All explainers</a>
+    <h1>TITLE</h1>
+    <p class="sub">One-line description of what this page explains.</p>
+
+    <!-- OPTION A: drop in a static image or hand-built SVG -->
+    <div class="figure">
+      <img src="your-diagram.svg" alt="describe the diagram">
+    </div>
+
+    <!-- OPTION B: a Mermaid diagram (uncomment the script at the bottom)
+    <div class="figure">
+      <pre class="mermaid">
+flowchart LR
+  A[Trigger] --> B[Skill] --> C[(Data source)] --> D[Output]
+      </pre>
+    </div>
+    -->
+
+    <p>Body text goes here. Explain the concept in plain language.</p>
+  </div>
+
+  <!-- Uncomment to enable Mermaid rendering:
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+  </script>
+  -->
+</body>
+</html>

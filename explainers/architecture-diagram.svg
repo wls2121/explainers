@@ -1,0 +1,328 @@
+<svg viewBox="0 0 1100 1150" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc" font-family="ui-sans-serif, -apple-system, system-ui, sans-serif">
+  <title id="title">Sales AI stack architecture — 2026-05-12</title>
+  <desc id="desc">DAG of scheduled triggers, skills, data sources, outputs, and feedback loops. Updated 2026-05-12: fct_gong_call_insights cortex.complete sidecar mart spec drafted and promoted to Priority 1 (first sales-domain AI-on-warehouse signal layer); Slack digest architecture decision (Snowflake/Python cron, not Cowork).</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/>
+    </marker>
+    <marker id="arrowFeedback" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9333ea"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1100" height="1150" fill="#ffffff"/>
+
+  <!-- Version header -->
+  <text x="20" y="18" font-size="11" fill="#9ca3af">v2026-05-12 · changes: fct_gong_call_insights cortex.complete sidecar mart spec drafted (per-call grain over fct_gong_call_transcripts, claude-3-5-sonnet, single JSON prompt) — first sales-domain AI-on-warehouse signal layer; Slack digest layer architecture: Snowflake/Python cron (not Cowork), driven by fct_opportunity_meddpicc</text>
+
+  <!-- ═══ CRON TRIGGERS ═══ -->
+  <text x="20" y="40" font-size="13" font-weight="600" fill="#4b5563" letter-spacing="1">CRON TRIGGERS · COWORK SCHEDULED TASKS</text>
+  <line x1="20" y1="48" x2="1080" y2="48" stroke="#e5e7eb" stroke-width="1"/>
+
+  <!-- Row A: 5 main cron triggers -->
+  <!-- C1: meta-audit-weekly -->
+  <g>
+    <rect x="27" y="62" width="185" height="70" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="119" y="83" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">meta-audit-weekly</text>
+    <text x="119" y="101" text-anchor="middle" font-size="11" fill="#1e40af">Sun 5:30am</text>
+    <text x="119" y="120" text-anchor="middle" font-size="10" fill="#1e40af" font-style="italic">supervisory pass</text>
+  </g>
+  <!-- C2: account-brain-weekly-deep -->
+  <g>
+    <rect x="247" y="62" width="185" height="70" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="339" y="83" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">account-brain-weekly-deep</text>
+    <text x="339" y="101" text-anchor="middle" font-size="11" fill="#1e40af">Mon 7:00am</text>
+    <text x="339" y="120" text-anchor="middle" font-size="10" fill="#1e40af" font-style="italic">full deep refresh, all accts</text>
+  </g>
+  <!-- C3: daily-brief-weekday -->
+  <g>
+    <rect x="467" y="62" width="185" height="70" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="559" y="83" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">daily-brief-weekday</text>
+    <text x="559" y="101" text-anchor="middle" font-size="11" fill="#1e40af">Tue–Fri 5:30am</text>
+    <text x="559" y="120" text-anchor="middle" font-size="10" fill="#1e40af" font-style="italic">today's prep</text>
+  </g>
+  <!-- C4: weekly-brief-friday -->
+  <g>
+    <rect x="687" y="62" width="185" height="70" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="779" y="83" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">weekly-brief-friday</text>
+    <text x="779" y="101" text-anchor="middle" font-size="11" fill="#1e40af">Fri 5:30am</text>
+    <text x="779" y="120" text-anchor="middle" font-size="10" fill="#1e40af" font-style="italic">coaching brief</text>
+  </g>
+  <!-- C5: ela-vate-monday-standings -->
+  <g>
+    <rect x="907" y="62" width="165" height="70" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="989" y="83" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">ela-vate-monday</text>
+    <text x="989" y="101" text-anchor="middle" font-size="11" fill="#1e40af">Mon 8:32am</text>
+    <text x="989" y="120" text-anchor="middle" font-size="10" fill="#1e40af" font-style="italic">sprint standings → Slack</text>
+  </g>
+
+  <!-- Row B: secondary triggers -->
+  <!-- C2: account-brain-daily-refresh DISABLED -->
+  <g>
+    <rect x="247" y="148" width="185" height="55" rx="8" fill="#f9fafb" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5 3"/>
+    <text x="339" y="166" text-anchor="middle" font-size="11" font-weight="600" fill="#6b7280">account-brain-daily-refresh</text>
+    <text x="339" y="182" text-anchor="middle" font-size="11" fill="#9ca3af">Tue–Fri 6am · ⊘ DISABLED</text>
+    <text x="339" y="196" text-anchor="middle" font-size="9" fill="#9ca3af" font-style="italic">delta hot-layer refresh</text>
+  </g>
+  <!-- C4: monday-week-kickoff -->
+  <g>
+    <rect x="687" y="148" width="185" height="55" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="779" y="166" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">monday-week-kickoff</text>
+    <text x="779" y="182" text-anchor="middle" font-size="11" fill="#1e40af">Fri 8:31am (after brief)</text>
+    <text x="779" y="196" text-anchor="middle" font-size="9" fill="#1e40af" font-style="italic">next week schedule + commitments</text>
+  </g>
+
+  <!-- Trigger → Skills arrows -->
+  <line x1="119" y1="132" x2="119" y2="278" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="339" y1="132" x2="339" y2="278" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="339" y1="203" x2="339" y2="278" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+  <line x1="559" y1="132" x2="559" y2="278" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="779" y1="132" x2="779" y2="278" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="779" y1="203" x2="779" y2="278" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="989" y1="132" x2="989" y2="278" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ═══ SKILLS ═══ -->
+  <text x="20" y="270" font-size="13" font-weight="600" fill="#4b5563" letter-spacing="1">SKILLS · RECIPES (live in Cowork; source-of-truth in skills-as-code repo)</text>
+  <line x1="20" y1="278" x2="1080" y2="278" stroke="#e5e7eb" stroke-width="1"/>
+
+  <!-- C1: meta-audit -->
+  <g>
+    <rect x="27" y="292" width="185" height="88" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="119" y="313" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">meta-audit</text>
+    <text x="119" y="331" text-anchor="middle" font-size="10" fill="#4338ca">surfaces drift, broken pipes,</text>
+    <text x="119" y="344" text-anchor="middle" font-size="10" fill="#4338ca">recurring corrections</text>
+    <text x="119" y="368" text-anchor="middle" font-size="9" fill="#6b7280" font-style="italic">kill-switch ✓</text>
+  </g>
+  <!-- C2: account-brain -->
+  <g>
+    <rect x="247" y="292" width="185" height="88" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="339" y="313" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">account-brain</text>
+    <text x="339" y="331" text-anchor="middle" font-size="10" fill="#4338ca">weekly-deep + on-demand;</text>
+    <text x="339" y="344" text-anchor="middle" font-size="10" fill="#4338ca">context lens for daily + weekly</text>
+    <text x="339" y="368" text-anchor="middle" font-size="9" fill="#6b7280" font-style="italic">SQL ingest 90d ✓ · kill-switch ✓</text>
+  </g>
+  <!-- C3: daily-brief -->
+  <g>
+    <rect x="467" y="292" width="185" height="88" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="559" y="313" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">daily-brief</text>
+    <text x="559" y="331" text-anchor="middle" font-size="10" fill="#4338ca">today's calls + open threads</text>
+    <text x="559" y="344" text-anchor="middle" font-size="10" fill="#4338ca">+ new pipeline + coaching pulses</text>
+    <text x="559" y="368" text-anchor="middle" font-size="9" fill="#6b7280" font-style="italic">GCal primary + SF supp ✓ · SQL ingest ✓ · kill-switch ✓</text>
+  </g>
+  <!-- C4: weekly-brief -->
+  <g>
+    <rect x="687" y="292" width="185" height="88" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="779" y="313" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">weekly-brief</text>
+    <text x="779" y="331" text-anchor="middle" font-size="10" fill="#4338ca">Gong-first coaching brief</text>
+    <text x="779" y="344" text-anchor="middle" font-size="10" fill="#4338ca">4 AMs · MEDDPICC + CotM</text>
+    <text x="779" y="368" text-anchor="middle" font-size="9" fill="#6b7280" font-style="italic">SQL transcript ingest ✓ · kill-switch · CF · MEDDPICC</text>
+  </g>
+  <!-- C5: ela-vate -->
+  <g>
+    <rect x="907" y="292" width="165" height="88" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="989" y="313" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">ela-vate</text>
+    <text x="989" y="331" text-anchor="middle" font-size="10" fill="#4338ca">sprint leaderboard;</text>
+    <text x="989" y="344" text-anchor="middle" font-size="10" fill="#4338ca">posts to #team-rev-growth</text>
+    <text x="989" y="368" text-anchor="middle" font-size="9" fill="#6b7280" font-style="italic">live artifact + Slack post</text>
+  </g>
+
+  <!-- On-demand skills row -->
+  <g>
+    <rect x="247" y="394" width="185" height="42" rx="6" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="339" y="412" text-anchor="middle" font-size="11" font-weight="600" fill="#374151">1on1-prep</text>
+    <text x="339" y="428" text-anchor="middle" font-size="9" fill="#6b7280" font-style="italic">on-demand · Mon workflow</text>
+  </g>
+  <g>
+    <rect x="467" y="394" width="185" height="42" rx="6" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="559" y="412" text-anchor="middle" font-size="11" font-weight="600" fill="#374151">upward-brief</text>
+    <text x="559" y="428" text-anchor="middle" font-size="9" fill="#6b7280" font-style="italic">on-demand · after 1on1-prep</text>
+  </g>
+  <!-- 1on1-prep feeds from account-brain (dashed) -->
+  <line x1="339" y1="380" x2="339" y2="394" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+  <!-- 1on1-prep → upward-brief -->
+  <line x1="432" y1="415" x2="467" y2="415" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#arrow)"/>
+
+  <!-- Skills → Data sources arrows -->
+  <line x1="119" y1="380" x2="119" y2="460" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="339" y1="380" x2="310" y2="460" stroke="#6b7280" stroke-width="1" stroke-dasharray="2 3"/>
+  <line x1="559" y1="380" x2="559" y2="460" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="779" y1="380" x2="779" y2="460" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ═══ DATA SOURCES ═══ -->
+  <text x="20" y="452" font-size="13" font-weight="600" fill="#4b5563" letter-spacing="1">DATA SOURCES · MCPs</text>
+  <line x1="20" y1="460" x2="1080" y2="460" stroke="#e5e7eb" stroke-width="1"/>
+
+  <!-- Google Cal -->
+  <g>
+    <rect x="27" y="473" width="148" height="56" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <text x="101" y="492" text-anchor="middle" font-size="12" font-weight="600" fill="#78350f">Google Cal</text>
+    <text x="101" y="507" text-anchor="middle" font-size="10" fill="#92400e">canonical schedule source</text>
+    <text x="101" y="521" text-anchor="middle" font-size="9" fill="#b45309" font-style="italic">SF:Event misses ~70%</text>
+  </g>
+  <!-- Salesforce -->
+  <g>
+    <rect x="193" y="473" width="148" height="56" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <text x="267" y="492" text-anchor="middle" font-size="12" font-weight="600" fill="#78350f">Salesforce</text>
+    <text x="267" y="507" text-anchor="middle" font-size="10" fill="#92400e">Opp · Account · User</text>
+    <text x="267" y="521" text-anchor="middle" font-size="10" fill="#92400e">Activity History (email)</text>
+  </g>
+  <!-- Gong MCP -->
+  <g>
+    <rect x="359" y="473" width="148" height="56" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <text x="433" y="492" text-anchor="middle" font-size="12" font-weight="600" fill="#78350f">Gong (MCP)</text>
+    <text x="433" y="507" text-anchor="middle" font-size="10" fill="#92400e">list_calls · transcripts</text>
+    <text x="433" y="521" text-anchor="middle" font-size="10" fill="#92400e">fallback path post-#4350</text>
+  </g>
+  <!-- dbt MCP (live) -->
+  <g>
+    <rect x="525" y="473" width="148" height="56" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <text x="599" y="492" text-anchor="middle" font-size="12" font-weight="600" fill="#78350f">dbt MCP</text>
+    <text x="599" y="507" text-anchor="middle" font-size="10" fill="#92400e">query_metrics (primary)</text>
+    <text x="599" y="521" text-anchor="middle" font-size="10" fill="#92400e">execute_sql (mart shape work)</text>
+  </g>
+  <!-- Notion -->
+  <g>
+    <rect x="691" y="473" width="148" height="56" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <text x="765" y="492" text-anchor="middle" font-size="12" font-weight="600" fill="#78350f">Notion</text>
+    <text x="765" y="507" text-anchor="middle" font-size="10" fill="#92400e">Account brains DB</text>
+    <text x="765" y="521" text-anchor="middle" font-size="10" fill="#92400e">Weekly Brief Evals DB</text>
+  </g>
+  <!-- Slack -->
+  <g>
+    <rect x="857" y="473" width="148" height="56" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <text x="931" y="492" text-anchor="middle" font-size="12" font-weight="600" fill="#78350f">Slack</text>
+    <text x="931" y="507" text-anchor="middle" font-size="10" fill="#92400e">internal channels</text>
+    <text x="931" y="521" text-anchor="middle" font-size="10" fill="#92400e">DM Will (kill-switch)</text>
+  </g>
+
+  <!-- Snowflake mart layer -->
+  <g>
+    <rect x="27" y="545" width="978" height="115" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+    <text x="516" y="564" text-anchor="middle" font-size="13" font-weight="700" fill="#14532d">Snowflake mart layer (via dbt MCP) · ALL LIVE in prod</text>
+    <text x="516" y="580" text-anchor="middle" font-size="10" fill="#166534">fct_customer_health · fct_gong_calls · fct_opportunities · int_salesforce__contacts_joined · cortex.complete · fct_slack_thread_llm_summaries</text>
+    <line x1="47" y1="587" x2="985" y2="587" stroke="#16a34a" stroke-width="0.5" stroke-dasharray="3 3"/>
+    <text x="516" y="601" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">★ fct_opportunity_meddpicc (PR #4343) — deal_health_grade A–F · eb_met_flag + champion_engaged_60d_flag LIVE (shipped 2026-04-30)</text>
+    <text x="516" y="617" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">★★ fct_gong_call_transcripts (PR #4350 MERGED) — labeled per-call transcript · CF-audio via UNKNOWN labels · LIVE</text>
+    <text x="516" y="635" text-anchor="middle" font-size="11" font-weight="700" fill="#15803d" font-style="italic">★★★ fct_gong_call_insights — SPEC DRAFTED 2026-05-12 · cortex.complete (claude-3-5-sonnet) per-call · 4 coaching columns · backfill = team × 90d · PENDING PR</text>
+    <text x="516" y="652" text-anchor="middle" font-size="10" fill="#166534" font-style="italic">env-header resolved 2026-04-30 · transcript ingest via SQL · query_metrics for audience-facing numbers · first sales-domain AI-on-warehouse signal layer</text>
+  </g>
+
+  <!-- Mart → outputs arrow -->
+  <line x1="516" y1="660" x2="516" y2="668" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ═══ OUTPUTS ═══ -->
+  <text x="20" y="661" font-size="13" font-weight="600" fill="#4b5563" letter-spacing="1">OUTPUTS</text>
+  <line x1="20" y1="669" x2="1080" y2="669" stroke="#e5e7eb" stroke-width="1"/>
+
+  <!-- C1: meta-audit output -->
+  <g>
+    <rect x="27" y="683" width="185" height="80" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="119" y="703" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">meta-audit-DATE.md</text>
+    <text x="119" y="720" text-anchor="middle" font-size="10" fill="#166534">.scheduled/meta-audit.json</text>
+    <text x="119" y="736" text-anchor="middle" font-size="10" fill="#166534">Slack DM (TL;DR)</text>
+    <text x="119" y="754" text-anchor="middle" font-size="10" fill="#166534" font-style="italic">Will reads, decides fixes</text>
+  </g>
+  <!-- C2: account-brain output -->
+  <g>
+    <rect x="247" y="683" width="185" height="80" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="339" y="703" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">account-brain-ACCT.md</text>
+    <text x="339" y="720" text-anchor="middle" font-size="10" fill="#166534">Notion: Account Brains DB</text>
+    <text x="339" y="736" text-anchor="middle" font-size="10" fill="#166534">feeds daily-brief + weekly</text>
+    <text x="339" y="754" text-anchor="middle" font-size="10" fill="#166534" font-style="italic">Will reads on-demand</text>
+  </g>
+  <!-- C3: daily-brief output -->
+  <g>
+    <rect x="467" y="683" width="185" height="80" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="559" y="703" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">daily-brief-DATE.md</text>
+    <text x="559" y="720" text-anchor="middle" font-size="10" fill="#166534">.scheduled/daily-brief.json</text>
+    <text x="559" y="736" text-anchor="middle" font-size="10" fill="#166534">briefs-viewer.html (regen)</text>
+    <text x="559" y="754" text-anchor="middle" font-size="10" fill="#166534" font-style="italic">Will reads in Chrome</text>
+  </g>
+  <!-- C4: weekly-brief output -->
+  <g>
+    <rect x="687" y="683" width="185" height="80" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="779" y="703" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">weekly-brief-DATE.md</text>
+    <text x="779" y="718" text-anchor="middle" font-size="10" fill="#166534">.scheduled/weekly-brief.json</text>
+    <text x="779" y="732" text-anchor="middle" font-size="10" fill="#166534">→ 1on1-prep · upward-brief</text>
+    <text x="779" y="746" text-anchor="middle" font-size="10" fill="#166534">→ next-week-kickoff.md</text>
+    <text x="779" y="761" text-anchor="middle" font-size="10" fill="#166534" font-style="italic">Will reads + 1:1s</text>
+  </g>
+  <!-- C5: ela-vate output -->
+  <g>
+    <rect x="907" y="683" width="165" height="80" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="989" y="703" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">ELA-VATE standings</text>
+    <text x="989" y="720" text-anchor="middle" font-size="10" fill="#166534">Slack: #team-rev-growth</text>
+    <text x="989" y="736" text-anchor="middle" font-size="10" fill="#166534">ela-sprint-leaderboard</text>
+    <text x="989" y="754" text-anchor="middle" font-size="10" fill="#166534" font-style="italic">live artifact (Cowork)</text>
+  </g>
+
+  <!-- (NEXT BUILDS box removed 2026-05-12 — topology-vs-backlog blur. Priority queue lives in Infrastructure Parking Lot + Kanban artifact; SVG is topology only.) -->
+
+  <!-- ═══ HUMAN INPUTS / MEMORY ═══ -->
+  <text x="20" y="863" font-size="13" font-weight="600" fill="#4b5563" letter-spacing="1">HUMAN INPUTS · MEMORY · SOURCE OF TRUTH</text>
+  <line x1="20" y1="871" x2="1080" y2="871" stroke="#e5e7eb" stroke-width="1"/>
+
+  <g>
+    <rect x="27" y="886" width="300" height="72" rx="8" fill="#f3e8ff" stroke="#9333ea" stroke-width="1.5"/>
+    <text x="177" y="906" text-anchor="middle" font-size="12" font-weight="700" fill="#581c87">Notion: Weekly Brief Evals</text>
+    <text x="177" y="923" text-anchor="middle" font-size="10" fill="#6b21a8">ground-truth labels (Quality + root cause)</text>
+    <text x="177" y="938" text-anchor="middle" font-size="10" fill="#6b21a8" font-style="italic">Will writes Fridays → evals/harness.py scores</text>
+    <text x="177" y="952" text-anchor="middle" font-size="9" fill="#9ca3af">meta-audit reads this weekly</text>
+  </g>
+  <g>
+    <rect x="357" y="886" width="250" height="72" rx="8" fill="#f3e8ff" stroke="#9333ea" stroke-width="1.5"/>
+    <text x="482" y="906" text-anchor="middle" font-size="12" font-weight="700" fill="#581c87">brief-feedback/*.md</text>
+    <text x="482" y="923" text-anchor="middle" font-size="10" fill="#6b21a8">free-form correction notes per brief</text>
+    <text x="482" y="938" text-anchor="middle" font-size="10" fill="#6b21a8" font-style="italic">Will writes ad-hoc → auto-memory</text>
+  </g>
+  <g>
+    <rect x="637" y="886" width="365" height="72" rx="8" fill="#f3e8ff" stroke="#9333ea" stroke-width="1.5"/>
+    <text x="819" y="906" text-anchor="middle" font-size="12" font-weight="700" fill="#581c87">.auto-memory/*.md + MEMORY.md index</text>
+    <text x="819" y="923" text-anchor="middle" font-size="10" fill="#6b21a8">cross-session: feedback · projects · refs · user profile</text>
+    <text x="819" y="938" text-anchor="middle" font-size="10" fill="#6b21a8" font-style="italic">Cowork writes; meta-audit reads + flags drift</text>
+  </g>
+
+  <!-- Source of truth box -->
+  <g>
+    <rect x="200" y="976" width="700" height="76" rx="8" fill="#fafafa" stroke="#525252" stroke-width="1.5"/>
+    <text x="550" y="997" text-anchor="middle" font-size="13" font-weight="700" fill="#171717">skills-as-code (private GitHub repo)</text>
+    <text x="550" y="1014" text-anchor="middle" font-size="10" fill="#404040">SOURCE OF TRUTH for SKILL.md files · build_skill.sh → .skill zips · upload-and-replace → Cowork</text>
+    <text x="550" y="1029" text-anchor="middle" font-size="10" fill="#404040">evals/harness.py reads Notion Evals → scores briefs · sanitize.py → public toolkit</text>
+    <text x="550" y="1044" text-anchor="middle" font-size="10" fill="#525252" font-style="italic">Will edits in Claude Code · upload-and-replace lands in Cowork</text>
+  </g>
+  <text x="415" y="972" font-size="9" fill="#525252">↑ build / upload-and-replace updates skill recipes</text>
+
+  <!-- Feedback arrows (purple dashed loops) -->
+  <!-- Weekly-brief output → Evals DB -->
+  <path d="M 779 763 Q 820 860 480 886" fill="none" stroke="#9333ea" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowFeedback)"/>
+  <!-- Weekly-brief output → auto-memory -->
+  <path d="M 779 763 Q 860 860 680 886" fill="none" stroke="#9333ea" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowFeedback)"/>
+  <!-- auto-memory → back to meta-audit skill (left loop) -->
+  <path d="M 177 958 Q 20 800 27 380" fill="none" stroke="#9333ea" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowFeedback)"/>
+  <!-- auto-memory → back to weekly-brief skill (right loop) -->
+  <path d="M 819 958 Q 1075 800 872 380" fill="none" stroke="#9333ea" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowFeedback)"/>
+
+  <!-- Legend -->
+  <g transform="translate(20, 1100)">
+    <text x="0" y="0" font-size="10" font-weight="600" fill="#4b5563">LEGEND</text>
+    <rect x="65" y="-9" width="14" height="11" rx="2" fill="#dbeafe" stroke="#3b82f6"/>
+    <text x="85" y="0" font-size="10" fill="#4b5563">cron trigger</text>
+    <rect x="183" y="-9" width="14" height="11" rx="2" fill="#eef2ff" stroke="#6366f1"/>
+    <text x="203" y="0" font-size="10" fill="#4b5563">skill</text>
+    <rect x="250" y="-9" width="14" height="11" rx="2" fill="#fef3c7" stroke="#d97706"/>
+    <text x="270" y="0" font-size="10" fill="#4b5563">data source</text>
+    <rect x="368" y="-9" width="14" height="11" rx="2" fill="#dcfce7" stroke="#16a34a"/>
+    <text x="388" y="0" font-size="10" fill="#4b5563">output / live</text>
+    <rect x="480" y="-9" width="14" height="11" rx="2" fill="#f3e8ff" stroke="#9333ea"/>
+    <text x="500" y="0" font-size="10" fill="#4b5563">human / memory</text>
+    <rect x="625" y="-9" width="14" height="11" rx="2" fill="#fee2e2" stroke="#dc2626"/>
+    <text x="645" y="0" font-size="10" fill="#4b5563">⚠ broken</text>
+    <rect x="730" y="-9" width="14" height="11" rx="2" fill="#f9fafb" stroke="#9ca3af" stroke-dasharray="5 3"/>
+    <text x="750" y="0" font-size="10" fill="#4b5563">disabled</text>
+    <line x1="830" y1="-4" x2="850" y2="-4" stroke="#9333ea" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="856" y="0" font-size="10" fill="#4b5563">feedback loop</text>
+    <rect x="970" y="-9" width="14" height="11" rx="2" fill="#f0fdf4" stroke="#16a34a" stroke-dasharray="5 3"/>
+    <text x="990" y="0" font-size="10" fill="#4b5563">next-build</text>
+  </g>
+</svg>

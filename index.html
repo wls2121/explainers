@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Explainers</title>
+<style>
+  :root {
+    --ink: #1a1a1a; --muted: #6b6b6b; --line: #e6e6e6;
+    --bg: #fafafa; --card: #fff; --accent: #ff694a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.6 ui-sans-serif, -apple-system, system-ui, sans-serif;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 64px 24px 96px; }
+  h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); margin: 0 0 40px; }
+  .grid { display: grid; gap: 14px; }
+  a.card {
+    display: block; background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 18px 20px; text-decoration: none; color: inherit;
+    transition: border-color .15s, transform .15s;
+  }
+  a.card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .card h2 { font-size: 17px; margin: 0 0 4px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14px; }
+  .guard {
+    margin-top: 48px; padding: 14px 16px; border-left: 3px solid var(--accent);
+    background: #fff5f2; border-radius: 0 8px 8px 0; font-size: 14px; color: #5a3a32;
+  }
+  footer { margin-top: 56px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Explainers</h1>
+    <p class="sub">Conceptual diagrams and walkthroughs. One page each, link-and-go.</p>
+
+    <div class="grid">
+      <a class="card" href="explainers/architecture.html">
+        <h2>Sales AI stack architecture</h2>
+        <p>The full DAG — triggers, skills, data sources, outputs, feedback loops.</p>
+      </a>
+      <!-- Add a new card per explainer. Copy _template.html into explainers/ and link it here. -->
+    </div>
+
+    <div class="guard">
+      <strong>House rule:</strong> explainers only. Nothing on this site should ever
+      be the top Google hit for a customer's name — no account names, ARR, churn,
+      or named stakeholders. If a page needs that, it doesn't belong here.
+    </div>
+
+    <footer>Hosted on GitHub Pages · see README for how to add a page.</footer>
+  </div>
+</body>
+</html>

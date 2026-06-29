@@ -1,0 +1,11 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+
+# Never commit anything that drifted in from elsewhere in the workspace.
+# This repo is explainers-only. If you find these here, something went wrong:
+*-brief-*.md
+*account-brain*
+*-feedback*

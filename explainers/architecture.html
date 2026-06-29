@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Sales AI stack architecture — Explainer</title>
+<style>
+  :root { --ink:#1a1a1a; --muted:#6b6b6b; --line:#e6e6e6; --bg:#fafafa; --card:#fff; --accent:#ff694a; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:16px/1.65 ui-sans-serif,-apple-system,system-ui,sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px 96px; }
+  a.back { color: var(--muted); text-decoration: none; font-size: 14px; }
+  a.back:hover { color: var(--accent); }
+  h1 { font-size: 28px; margin: 18px 0 6px; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); margin: 0 0 32px; }
+  .figure { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .figure img { width: 100%; height: auto; display: block; }
+  p { max-width: 64ch; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="../index.html">&larr; All explainers</a>
+    <h1>Sales AI stack architecture</h1>
+    <p class="sub">How the pieces fit: scheduled triggers fire skills, skills pull from data sources, outputs land where the team reads them, and human feedback loops back into memory.</p>
+
+    <div class="figure">
+      <img src="architecture-diagram.svg" alt="DAG of scheduled triggers, skills, data sources, outputs, and feedback loops">
+    </div>
+
+    <p>Read it left to right: cron triggers at the top kick off the skills, each skill reads from one or more connectors, the result gets written to an output destination, and corrections flow back into memory so the next run is sharper. Swap in a fresh SVG whenever the architecture changes.</p>
+  </div>
+</body>
+</html>
