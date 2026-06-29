@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>How an autonomous coding-agent fleet is wired</title>
+<style>
+  :root {
+    --artifact-background:#ffffff;
+    --artifact-background-light:#f6f6f6;
+    --artifact-background-mid:#f0f0f0;
+    --artifact-border-light:#e5e5e5;
+    --artifact-border-dark:#cccccc;
+    --artifact-text-primary:#1b1b1b;
+    --artifact-text-secondary:#727272;
+
+    --ai: #343ced; --ai-soft: #e7e8fd;
+    --tools: #82951e; --tools-soft: #eef2da;
+    --orch: #ef601b; --orch-soft: #fde7db;
+    --deliver: #dd2ca5; --deliver-soft: #fbe1f2;
+    --infra: #6b7280; --infra-soft: #eceef1;
+    --flow-line: #b8bec6;
+    --code-bg: #f3f4f6; --code-fg: #1b1b1b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    margin: 0; padding: 32px 24px 64px;
+    background: var(--artifact-background); color: var(--artifact-text-primary); line-height: 1.45;
+  }
+  .shell { max-width: 1280px; margin: 0 auto; }
+  .back { color: var(--artifact-text-secondary); text-decoration: none; font-size: 0.82rem; }
+  .back:hover { color: var(--ai); }
+  h1 { font-family: "DM Sans", system-ui, sans-serif; font-size: 1.7rem; font-weight: 700; margin: 14px 0 4px; letter-spacing: -0.02em; }
+  .sub { color: var(--artifact-text-secondary); font-size: 0.95rem; margin: 0 0 22px; max-width: 760px; }
+  .section-label {
+    font-family: "DM Sans", system-ui, sans-serif; font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--artifact-text-secondary); margin: 30px 0 14px; display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after { content: ""; flex: 1; height: 1px; background: var(--artifact-border-light); }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 0 0 14px; font-size: 0.8rem; color: var(--artifact-text-secondary); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+  .hint { font-size: 0.8rem; color: var(--artifact-text-secondary); margin: 0 0 12px; }
+  .hint b { color: var(--artifact-text-primary); }
+
+  /* ---------- DAG ---------- */
+  .dag-scroll { overflow-x: auto; padding-bottom: 8px; border: 1px solid var(--artifact-border-light); border-radius: 14px; background: var(--artifact-background-light); }
+  .dag { position: relative; width: 1280px; height: 700px; }
+  .dag svg { position: absolute; inset: 0; width: 1280px; height: 700px; pointer-events: none; }
+  .edge { stroke: var(--flow-line); stroke-width: 2; fill: none; marker-end: url(#arrow); }
+  .ah { fill: var(--flow-line); }
+  .edge-loop { stroke: var(--ai); stroke-width: 1.6; fill: none; stroke-dasharray: 4 4; marker-end: url(#arrowAi); }
+  .ahAi { fill: var(--ai); }
+  .edge-fb { stroke: var(--deliver); stroke-width: 2; fill: none; stroke-dasharray: 7 5; marker-end: url(#arrowFb); }
+  .ahFb { fill: var(--deliver); }
+  .elabel { fill: var(--artifact-text-secondary); font-size: 11px; font-family: system-ui, sans-serif; }
+  .elabel-fb { fill: var(--deliver); font-size: 11px; font-weight: 600; font-family: system-ui, sans-serif; }
+
+  .node {
+    position: absolute; border: 1.5px solid var(--artifact-border-light); border-left-width: 4px;
+    border-radius: 10px; background: var(--artifact-background); padding: 9px 11px; cursor: pointer;
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease; overflow: hidden;
+  }
+  .node:hover { transform: translateY(-2px); box-shadow: 0 5px 16px rgba(0,0,0,0.12); }
+  .node.active { box-shadow: 0 0 0 2px var(--nc, var(--flow-line)), 0 6px 18px rgba(0,0,0,0.14); }
+  .n-name { font-family: "DM Sans", sans-serif; font-weight: 700; font-size: 0.88rem; margin-bottom: 2px; }
+  .n-sub { font-size: 0.74rem; color: var(--artifact-text-secondary); }
+  .n-orch { border-left-color: var(--orch); --nc: var(--orch); }
+  .n-ai { border-left-color: var(--ai); --nc: var(--ai); }
+  .n-tools { border-left-color: var(--tools); --nc: var(--tools); }
+  .n-deliver { border-left-color: var(--deliver); --nc: var(--deliver); }
+  .col-cap { position: absolute; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--artifact-text-secondary); }
+
+  .chip { display: inline-block; font-size: 0.72rem; background: var(--artifact-background-mid); border: 1px solid var(--artifact-border-light); border-radius: 6px; padding: 2px 7px; margin: 2px 3px 0 0; }
+
+  /* ---------- DETAIL PANEL ---------- */
+  .detail { margin-top: 16px; border: 1px solid var(--artifact-border-light); border-radius: 14px; background: var(--artifact-background-light); padding: 18px 20px; min-height: 200px; }
+  .detail h3 { font-family: "DM Sans", sans-serif; margin: 0 0 2px; font-size: 1.1rem; display: flex; align-items: center; gap: 9px; }
+  .badge { font-size: 0.68rem; font-weight: 700; color: #fff; padding: 2px 8px; border-radius: 999px; }
+  .detail .role { color: var(--artifact-text-secondary); font-size: 0.85rem; margin: 0 0 14px; }
+  .io { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 720px) { .io { grid-template-columns: 1fr; } .dag { width: 1280px; } }
+  .io-card { border: 1px solid var(--artifact-border-light); border-radius: 10px; background: var(--artifact-background); padding: 12px 13px; }
+  .io-card .lbl { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--artifact-text-secondary); margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+  .io-in .lbl::before { content: "▸"; color: var(--orch); }
+  .io-out .lbl::before { content: "✦"; color: var(--tools); }
+  pre.code { margin: 0; background: var(--code-bg); color: var(--code-fg); border-radius: 7px; padding: 9px 10px; font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.76rem; white-space: pre-wrap; word-break: break-word; line-height: 1.4; }
+  .visual { margin-top: 14px; }
+  .visual .lbl { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--artifact-text-secondary); margin-bottom: 8px; }
+
+  /* mini mockups */
+  .mock { border: 1px solid var(--artifact-border-light); border-radius: 9px; background: var(--artifact-background); padding: 11px 13px; font-size: 0.82rem; max-width: 560px; }
+  .mock .mhead { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .mock .mtitle { font-weight: 700; font-family: "DM Sans", sans-serif; }
+  .mock .meta { color: var(--artifact-text-secondary); font-size: 0.76rem; }
+  .pill { font-size: 0.66rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+  .pill-draft { background: var(--infra-soft); color: var(--artifact-text-secondary); }
+  .pill-merged { background: var(--ai-soft); color: var(--ai); }
+  .pill-label { background: var(--tools-soft); color: var(--tools); }
+  .diffline { font-family: "SF Mono", ui-monospace, monospace; font-size: 0.76rem; padding: 1px 6px; border-radius: 4px; }
+  .diff-add { background: rgba(40,160,80,0.14); }
+  .takeaway { margin-top: 26px; padding: 15px 18px; border-radius: 12px; background: var(--artifact-background-mid); border: 1px solid var(--artifact-border-light); font-size: 0.9rem; }
+
+  .sched { border:1px solid var(--artifact-border-light); border-left:4px solid var(--orch); border-radius:10px; background:var(--artifact-background); padding:11px 13px; }
+  .sched-h { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .sched-n { font-family:"DM Sans",sans-serif; font-weight:700; font-size:0.88rem; }
+  .sched-d { font-size:0.79rem; color:var(--artifact-text-secondary); margin-top:6px; }
+  .schp { background:var(--orch-soft); color:var(--orch); white-space:nowrap; }
+  code { font-family:"SF Mono",ui-monospace,monospace; font-size:0.85em; background:var(--code-bg); padding:1px 4px; border-radius:4px; }
+  .fedge { stroke:var(--ai); stroke-width:1.8; fill:none; opacity:0.55; marker-end:url(#arrow2); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <a class="back" href="../index.html">← All explainers</a>
+  <h1>How an autonomous coding-agent fleet is wired</h1>
+  <p class="sub">A generic pattern, not any one company's setup. A directed graph of how a single trigger flows through an autonomous software-engineering system. Triggers converge on a durable workflow engine, which drives the agent reasoning loop, which fans out to tools, which produce outputs — and one output (a self-improvement ticket) loops back as a new trigger.</p>
+
+  <div class="legend">
+    <span><i class="dot" style="background:var(--orch)"></i> Orchestration &amp; triggers</span>
+    <span><i class="dot" style="background:var(--ai)"></i> AI core</span>
+    <span><i class="dot" style="background:var(--tools)"></i> Agent tools</span>
+    <span><i class="dot" style="background:var(--deliver)"></i> Outputs</span>
+  </div>
+  <p class="hint"><b>Click any node</b> to see an illustrative input &amp; output below. The dashed magenta edge is the feedback loop; the dashed indigo edge is the agent&rarr;tools reasoning loop.</p>
+
+  <div class="dag-scroll">
+  <div class="dag" id="dag">
+    <svg viewBox="0 0 1280 700" aria-hidden="true">
+      <defs>
+        <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path class="ah" d="M0,0 L7,3 L0,6 Z"/></marker>
+        <marker id="arrowAi" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path class="ahAi" d="M0,0 L7,3 L0,6 Z"/></marker>
+        <marker id="arrowFb" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path class="ahFb" d="M0,0 L7,3 L0,6 Z"/></marker>
+      </defs>
+      <!-- triggers -> engine -->
+      <path class="edge" d="M206 79 C266 79 240 345 300 345"/>
+      <path class="edge" d="M206 229 C266 229 250 345 300 345"/>
+      <path class="edge" d="M206 379 C266 379 250 345 300 345"/>
+      <path class="edge" d="M206 529 C266 529 240 345 300 345"/>
+      <!-- engine -> agent -->
+      <path class="edge" d="M480 345 L556 345"/>
+      <!-- agent -> tools (call) and dashed return (loop) -->
+      <path class="edge" d="M750 358 L826 358"/>
+      <path class="edge-loop" d="M826 330 C786 312 786 312 752 330"/>
+      <text class="elabel" x="762" y="350">calls</text>
+      <text class="elabel" x="760" y="322">returns</text>
+      <!-- tools -> deliver -->
+      <path class="edge" d="M1040 345 C1062 345 1060 109 1078 109"/>
+      <path class="edge" d="M1040 345 C1062 345 1060 249 1078 249"/>
+      <path class="edge" d="M1040 345 C1062 345 1060 389 1078 389"/>
+      <path class="edge" d="M1040 345 C1062 345 1060 599 1078 599"/>
+      <!-- feedback loop: self-improvement -> ticket trigger -->
+      <path class="edge-fb" d="M1180 638 C860 726 360 724 111 420"/>
+      <text class="elabel-fb" x="560" y="700">self-improvement ticket re-enters as a new ticket trigger</text>
+      <!-- babysit feeds PR -->
+      <path class="edge-loop" d="M1170 210 C1150 180 1150 165 1168 150"/>
+    </svg>
+
+    <!-- column captions -->
+    <div class="col-cap" style="left:60px; top:12px;">Triggers</div>
+    <div class="col-cap" style="left:330px; top:12px;">Orchestrate</div>
+    <div class="col-cap" style="left:600px; top:12px;">Think</div>
+    <div class="col-cap" style="left:885px; top:12px;">Act (tools)</div>
+    <div class="col-cap" style="left:1130px; top:12px;">Deliver</div>
+
+    <!-- TRIGGER NODES -->
+    <div class="node n-orch" data-node="chat" style="left:16px; top:46px; width:190px; height:66px;">
+      <div class="n-name">Chat @-mention</div><div class="n-sub">human asks / kicks off work</div>
+    </div>
+    <div class="node n-orch" data-node="ghhook" style="left:16px; top:196px; width:190px; height:66px;">
+      <div class="n-name">Code-host webhook</div><div class="n-sub">PR / review / check-run event</div>
+    </div>
+    <div class="node n-orch" data-node="jirahook" style="left:16px; top:346px; width:190px; height:66px;">
+      <div class="n-name">Issue-tracker webhook</div><div class="n-sub">ticket → ready-for-agent label</div>
+    </div>
+    <div class="node n-orch" data-node="cron" style="left:16px; top:496px; width:190px; height:66px;">
+      <div class="n-name">Scheduled cron</div><div class="n-sub">daily triage · weekly health</div>
+    </div>
+
+    <!-- ENGINE -->
+    <div class="node n-orch" data-node="engine" style="left:300px; top:285px; width:180px; height:120px;">
+      <div class="n-name">Workflow engine</div>
+      <div class="n-sub">durable workflow engine + scheduler. Retry-safe, survives crashes, runs on schedule.</div>
+    </div>
+
+    <!-- AGENT RUNTIME -->
+    <div class="node n-ai" data-node="agent" style="left:560px; top:275px; width:190px; height:140px;">
+      <div class="n-name">Agent runtime ↻</div>
+      <div class="n-sub">an agent-SDK loop driving a frontier model — reason → act → observe.</div>
+      <div style="margin-top:4px;"><span class="chip">agent SDK</span><span class="chip">LLM</span><span class="chip">cloud inference</span></div>
+    </div>
+
+    <!-- TOOLS CLUSTER -->
+    <div class="node n-tools" data-node="tools" style="left:830px; top:130px; width:210px; height:430px;">
+      <div class="n-name">Tools</div>
+      <div class="n-sub" style="margin-bottom:8px;">what the agent invokes</div>
+      <div data-node="github" class="chip" style="display:block; padding:7px 9px; margin:5px 0;"><b>Code host</b> · code + PRs</div>
+      <div data-node="jira" class="chip" style="display:block; padding:7px 9px; margin:5px 0;"><b>Issue tracker</b> (via MCP) · tickets</div>
+      <div data-node="shell" class="chip" style="display:block; padding:7px 9px; margin:5px 0;"><b>Shell + files</b> · build/test</div>
+      <div data-node="codehealth" class="chip" style="display:block; padding:7px 9px; margin:5px 0;"><b>Code-health analyzer</b> · tech-debt rank</div>
+      <div data-node="security" class="chip" style="display:block; padding:7px 9px; margin:5px 0;"><b>Security scanner</b> · vuln scan</div>
+    </div>
+
+    <!-- DELIVER NODES -->
+    <div class="node n-deliver" data-node="pr" style="left:1078px; top:76px; width:188px; height:66px;">
+      <div class="n-name">PR opened</div><div class="n-sub">diff + provenance</div>
+    </div>
+    <div class="node n-deliver" data-node="babysit" style="left:1078px; top:216px; width:188px; height:66px;">
+      <div class="n-name">Babysit loop ↻</div><div class="n-sub">fix CI, resolve conflicts</div>
+    </div>
+    <div class="node n-deliver" data-node="comment" style="left:1078px; top:356px; width:188px; height:66px;">
+      <div class="n-name">Ticket comment</div><div class="n-sub">triage / status reply</div>
+    </div>
+    <div class="node n-deliver" data-node="selfimp" style="left:1078px; top:566px; width:188px; height:66px;">
+      <div class="n-name">Self-improvement ticket</div><div class="n-sub">files against a meta-epic</div>
+    </div>
+  </div>
+  </div>
+
+  <div class="detail" id="detail"><!-- filled by JS --></div>
+
+  <div class="section-label">Autonomous schedules — the &ldquo;default state = act&rdquo; engine</div>
+  <p class="hint">These run on the engine's timers/polls with <b>no human in the loop</b>. A typical triage cron looks like <code>0 9 * * 1-5</code> (weekday mornings); the rest are described by cadence.</p>
+  <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(236px,1fr)); gap:10px;">
+    <div class="sched"><div class="sched-h"><span class="sched-n">Backlog triage</span><span class="pill schp">weekdays · 9am</span></div><div class="sched-d">Finds backlog tickets without a <code>triaged</code> label, runs a ticket-improvement skill, comments &amp; labels them.</div></div>
+    <div class="sched"><div class="sched-h"><span class="sched-n">Code health</span><span class="pill schp">weekly / agent</span></div><div class="sched-d">Ranks tech debt, then opens refactor or test-coverage PRs nobody asked for.</div></div>
+    <div class="sched"><div class="sched-h"><span class="sched-n">Routing scheduler</span><span class="pill schp">continuous</span></div><div class="sched-d">Polls the tracker, picks up <code>ready-for-agent</code> tickets and dispatches them to the right agent.</div></div>
+    <div class="sched"><div class="sched-h"><span class="sched-n">Code review</span><span class="pill schp">scheduled</span></div><div class="sched-d">Backstop that reviews open PRs in the configured repos (a per-agent review hook is the primary trigger).</div></div>
+    <div class="sched"><div class="sched-h"><span class="sched-n">Self-improvement reflection</span><span class="pill schp">per session</span></div><div class="sched-d">Reads its own transcript after each session and files tickets on itself under a meta-epic.</div></div>
+    <div class="sched"><div class="sched-h"><span class="sched-n">Nightly regression sim</span><span class="pill schp">nightly</span></div><div class="sched-d">Runs a nightly simulation against the platform under test to surface regressions.</div></div>
+    <div class="sched"><div class="sched-h"><span class="sched-n">Security scan</span><span class="pill schp">scheduled</span></div><div class="sched-d">Periodic security scans across the code; findings attach to the run.</div></div>
+    <div class="sched"><div class="sched-h"><span class="sched-n">Failed-activity triage</span><span class="pill schp">scheduled</span></div><div class="sched-d">Triages workflow activities that errored, so failures don&rsquo;t sit silently.</div></div>
+    <div class="sched"><div class="sched-h"><span class="sched-n">End-of-day standup</span><span class="pill schp">daily · EOD</span></div><div class="sched-d">Posts a standup-style summary of the day&rsquo;s agent activity to chat.</div></div>
+    <div class="sched"><div class="sched-h"><span class="sched-n">PR feedback analysis</span><span class="pill schp">scheduled</span></div><div class="sched-d">Analyzes human review feedback on agent PRs to spot recurring issues.</div></div>
+    <div class="sched"><div class="sched-h"><span class="sched-n">Housekeeping</span><span class="pill schp">daily</span></div><div class="sched-d">Daily housekeeping routine for logs and run state.</div></div>
+    <div class="sched"><div class="sched-h"><span class="sched-n">Artifact cleanup</span><span class="pill schp">periodic</span></div><div class="sched-d">Sweeps expired media artifacts out of object storage.</div></div>
+  </div>
+
+  <div class="section-label">The fleet — one platform, many specialized agents</div>
+  <p class="hint">The routing scheduler is the fan-out point: it reads the board &amp; repo of each ticket and hands it to the agent that owns that domain. Each agent runs the same harness with its own repos, model config, and context file.</p>
+  <div class="dag-scroll">
+  <div class="dag" style="width:860px; height:752px;">
+    <svg style="width:860px; height:752px;" viewBox="0 0 860 752" aria-hidden="true">
+      <defs><marker id="arrow2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path class="ahAi" d="M0,0 L7,3 L0,6 Z"/></marker></defs>
+      <path class="fedge" d="M200 386 C258 386 248 64 298 64"/>
+      <path class="fedge" d="M200 386 C258 386 250 186 298 186"/>
+      <path class="fedge" d="M200 386 C258 386 252 308 298 308"/>
+      <path class="fedge" d="M200 386 C258 386 252 430 298 430"/>
+      <path class="fedge" d="M200 386 C258 386 250 552 298 552"/>
+      <path class="fedge" d="M200 386 C258 386 248 674 298 674"/>
+      <path class="fedge" d="M200 386 C430 386 470 64 598 64"/>
+      <path class="fedge" d="M200 386 C430 386 480 186 598 186"/>
+      <path class="fedge" d="M200 386 C430 386 482 308 598 308"/>
+      <path class="fedge" d="M200 386 C430 386 482 430 598 430"/>
+      <path class="fedge" d="M200 386 C430 386 480 552 598 552"/>
+      <path class="fedge" d="M200 386 C430 386 470 674 598 674"/>
+    </svg>
+
+    <div class="node n-orch" style="left:16px; top:328px; width:184px; height:116px;">
+      <div class="n-name">Routing scheduler</div>
+      <div class="n-sub">maps a ticket&rsquo;s board + repo &rarr; the agent that owns it.</div>
+    </div>
+
+    <div class="node n-ai" style="left:298px; top:20px; width:230px; height:88px;"><div class="n-name">orchestration</div><div class="n-sub">cross-cutting orchestration work</div></div>
+    <div class="node n-ai" style="left:298px; top:142px; width:230px; height:88px;"><div class="n-name">platform services</div><div class="n-sub">core platform / backend services</div></div>
+    <div class="node n-ai" style="left:298px; top:264px; width:230px; height:88px;"><div class="n-name">signup &amp; accounts</div><div class="n-sub">onboarding / account flows</div></div>
+    <div class="node n-ai" style="left:298px; top:386px; width:230px; height:88px;"><div class="n-name">data &amp; analytics</div><div class="n-sub">internal analytics + data projects</div></div>
+    <div class="node n-ai" style="left:298px; top:508px; width:230px; height:88px;"><div class="n-name">product telemetry</div><div class="n-sub">events &amp; usage data · majority-vote routing</div></div>
+    <div class="node n-ai" style="left:298px; top:630px; width:230px; height:88px;"><div class="n-name">metadata / catalog</div><div class="n-sub">metadata &amp; catalog services</div></div>
+
+    <div class="node n-ai" style="left:598px; top:20px; width:246px; height:88px;"><div class="n-name">developer tooling</div><div class="n-sub">IDE / CLI / editor surfaces</div></div>
+    <div class="node n-ai" style="left:598px; top:142px; width:246px; height:88px;"><div class="n-name">OSS core</div><div class="n-sub">open-source engine, compiler, adapters</div></div>
+    <div class="node n-ai" style="left:598px; top:264px; width:246px; height:88px;"><div class="n-name">repro agent</div><div class="n-sub">turns OSS bug reports into reproductions in a scratch repo</div></div>
+    <div class="node n-ai" style="left:598px; top:386px; width:246px; height:88px;"><div class="n-name">the platform itself</div><div class="n-sub">self-modifications gated behind a ticket</div></div>
+    <div class="node n-ai" style="left:598px; top:508px; width:246px; height:88px;"><div class="n-name">partner agent</div><div class="n-sub">opt-in, needs its own build cache token</div></div>
+    <div class="node n-ai" style="left:598px; top:630px; width:246px; height:88px;"><div class="n-name">fallback</div><div class="n-sub">catch-all when no specialized agent matches</div></div>
+  </div>
+  </div>
+
+  <div class="takeaway">
+    <b>Read the graph in one breath:</b> four kinds of trigger funnel into a <b>durable workflow engine</b> → which runs the <b>agent reasoning loop</b> → which calls a short list of <b>tools</b> → which produce <b>outputs</b>. The magenta loop is the part that makes it feel alive: the system reviews its own transcripts and files tickets that come back in as fresh work — no human in that cycle.
+  </div>
+</div>
+
+<script>
+  var COLORS = { orch:'var(--orch)', ai:'var(--ai)', tools:'var(--tools)', deliver:'var(--deliver)' };
+  var NODES = {
+    overview: { layer:'orch', name:'End-to-end worked example', role:'An illustrative ticket traced through every node.',
+      input:'Ticket TICKET-481:\n"enable PR review on the\norchestration agent"\n(status: To Do, label: ready-for-agent)',
+      output:'A PR is opened, reviewed by a spawned\ncode-review workflow, and merged.\nEach run carries a cost + token summary.',
+      steps:['Ticket label fires → engine dispatches the coding-agent workflow','Agent loop reads the repo worktree + context file','Edits a config file, runs the validation command (shell)','Opens a draft PR via the code host','A review hook spawns a code-review child workflow; babysit watches CI','A human approver signs off → merge'] },
+    chat: { layer:'orch', name:'Chat @-mention', role:'The human interface — a person asks a question or kicks off work in a thread.',
+      input:'@agent what changed in\nsrc/server.ts in the last week?',
+      output:'Threaded reply summarizing\nrecent commits + PRs, posted as the bot.' },
+    ghhook: { layer:'orch', name:'Code-host webhook', role:'Event trigger — a PR, review, or check-run event signals a running workflow.',
+      input:'event: pull_request\naction: "opened"',
+      output:'A webhook signal is queued →\nbabysit / review workflow reacts.' },
+    jirahook: { layer:'orch', name:'Issue-tracker webhook / label', role:'Event trigger — a ticket moving to "ready-for-agent" puts work on the queue.',
+      input:'ticket transitioned to "To Do"\n+ label "ready-for-agent" added',
+      output:'The coding-agent workflow is dispatched on\nits task queue.' },
+    cron: { layer:'orch', name:'Scheduled cron', role:'Time trigger — the "default state = act" part. No human involved.',
+      input:'schedule "backlog-triage"\ncron: 0 9 * * 1-5',
+      output:'The triage workflow starts:\n{"projectKey":"PROJ","maxTickets":20}' },
+    engine: { layer:'orch', name:'Workflow engine', role:'Durable workflow engine + scheduler. Every multi-step behavior runs here.',
+      input:'CodingAgentInput JSON:\n{ issueKey:"TICKET-481",\n  agentId:"orchestration",\n  repoRemote:"…/service.git" }',
+      output:'A durable run with retry-safe steps +\nsearchable attributes (issue key, agent, repo).' },
+    agent: { layer:'ai', name:'Agent runtime', role:'The reasoning loop. A frontier model plans, calls tools, observes, repeats.',
+      input:'Ticket body + repo worktree + context file,\nplus a configured model.',
+      output:'A sequence of tool calls + a cost summary\n(tokens used, cache reads, dollar cost).' },
+    tools: { layer:'tools', name:'Tools', role:'The disciplined toolset the agent invokes — click an individual tool for its own I/O.',
+      input:'The agent decides which tool to call each turn\n(code host, tracker/MCP, shell, analyzers).',
+      output:'Tool results feed back into the loop until\nthe task is done.' },
+    github: { layer:'tools', name:'Code host (CLI + app)', role:'Code access + pull requests.',
+      input:'git checkout -b agent/TICKET-481…\nedit config.yaml\nopen a draft PR',
+      output:'A PR is opened with the diff below.' },
+    jira: { layer:'tools', name:'Issue tracker (via MCP)', role:'The work queue — structured ticket access over MCP.',
+      input:'search tickets by query\n(open children of a parent epic)',
+      output:'Existing tickets returned (for dedupe) →\nnew ticket created or comment posted.' },
+    shell: { layer:'tools', name:'Shell + files', role:'Runs build/test/git commands inside the worktree.',
+      input:'run the validation / test command',
+      output:'exit 0  ✅  (validation passed)' },
+    codehealth: { layer:'tools', name:'Code-health analyzer', role:'Ranks files by technical debt for the weekly code-health job.',
+      input:'analyze repo → rank by debt + coverage',
+      output:'worst offenders list → pick a refactor /\ncoverage target for a code-health PR.' },
+    security: { layer:'tools', name:'Security scanner', role:'Scheduled security scanning.',
+      input:'trigger scan on the PR diff',
+      output:'security findings report attached to the run.' },
+    pr: { layer:'deliver', name:'PR opened', role:'The primary deliverable — a reviewable pull request with provenance.',
+      input:'validated diff + "Approved for execution by"',
+      output:'A draft PR, with the approver requested as reviewer.',
+      visual:'pr' },
+    babysit: { layer:'deliver', name:'Babysit loop', role:'After opening a PR, the agent monitors it and reacts without prompting.',
+      input:'PR webhook events: CI failed / review comment',
+      output:'Agent pushes fixes, resolves merge conflicts,\nre-requests review — until merge.' },
+    comment: { layer:'deliver', name:'Ticket comment', role:'The triage / answer deliverable posted back to the tracker.',
+      input:'ticket-improvement skill output',
+      output:'Comment posted + "triaged" label added;\nstatus → Triaged.',
+      visual:'comment' },
+    selfimp: { layer:'deliver', name:'Self-improvement ticket', role:'The feedback loop — the system critiques its own session and files work on itself.',
+      input:'Its own session transcript from\na memory repo',
+      output:'New tickets filed under a meta-epic\ndescribing its own failure patterns.',
+      visual:'selfimp' }
+  };
+
+  function mock(kind){
+    if(kind==='pr') return '<div class="mock"><div class="mhead"><span class="pill pill-draft">Draft</span><span class="mtitle">feat: enable PR review on the orchestration agent (TICKET-481)</span></div>'+
+      '<div class="diffline diff-add">+ reviewPr: true</div>'+
+      '<div class="meta" style="margin-top:7px;">agents/orchestration.yaml · Approved for execution by: a human approver · 🤖 auto-generated</div></div>';
+    if(kind==='comment') return '<div class="mock"><div class="mhead"><span class="pill pill-label">triaged</span><span class="mtitle">Agent commented on a ticket</span></div>'+
+      '<div class="meta">Investigated the request, restructured into clear Summary / Acceptance Criteria / Definition of Done, and added the triaged label. Status → Triaged.</div></div>';
+    if(kind==='selfimp') return '<div class="mock"><div class="mhead"><span class="pill pill-merged">meta-epic</span><span class="mtitle">2 self-improvement tickets filed</span></div>'+
+      '<div class="meta" style="margin-top:4px;">• drops a follow-up step after producing a plan<br>• wastes tool calls searching the wrong repos before checking itself</div></div>';
+    return '';
+  }
+
+  function render(id){
+    var n = NODES[id]; if(!n) return;
+    var c = COLORS[n.layer];
+    var html = '<h3><span class="badge" style="background:'+c+'">'+n.layer.toUpperCase()+'</span>'+n.name+'</h3>'+
+      '<p class="role">'+n.role+'</p>';
+    if(n.steps){
+      html += '<div class="io"><div class="io-card io-in"><div class="lbl">Example input</div><pre class="code">'+n.input+'</pre></div>'+
+        '<div class="io-card io-out"><div class="lbl">Final output</div><pre class="code">'+n.output+'</pre></div></div>'+
+        '<div class="visual"><div class="lbl">The path it takes</div><ol style="margin:0; padding-left:18px; font-size:0.86rem;">'+
+        n.steps.map(function(s){return '<li style="margin-bottom:3px;">'+s+'</li>';}).join('')+'</ol></div>';
+    } else {
+      html += '<div class="io"><div class="io-card io-in"><div class="lbl">Example input</div><pre class="code">'+n.input+'</pre></div>'+
+        '<div class="io-card io-out"><div class="lbl">Example output</div><pre class="code">'+n.output+'</pre></div></div>';
+      if(n.visual){ html += '<div class="visual"><div class="lbl">What it looks like</div>'+mock(n.visual)+'</div>'; }
+    }
+    document.getElementById('detail').innerHTML = html;
+  }
+
+  var nodes = document.querySelectorAll('[data-node]');
+  function setActive(el){
+    document.querySelectorAll('.node.active').forEach(function(n){ n.classList.remove('active'); });
+    var card = el.classList.contains('node') ? el : el.closest('.node');
+    if(card) card.classList.add('active');
+    render(el.getAttribute('data-node'));
+  }
+  nodes.forEach(function(el){
+    el.addEventListener('click', function(e){ e.stopPropagation(); setActive(el); });
+  });
+  render('overview');
+</script>
+</body>
+</html>
