@@ -42,9 +42,14 @@
   @media (prefers-color-scheme: dark){
     :root{ --ink:#e7e9ec; --mut:#9aa3ad; --line:#2b313a; --bg:#1b1f26; --soft:#14171c; }
     .page{ box-shadow:0 1px 3px rgba(0,0,0,.4); }
-    /* keep hand-drawn diagrams on a light figure card so they stay readable */
-    figure{ background:#fff; border-radius:10px; padding:12px 14px;
-            --ink:#1f2937; --mut:#6b7280; --line:#e5e7eb; --soft:#f6f6f4; --bg:#ffffff; }
+    /* invert the hand-drawn diagrams so they go dark, not bright */
+    figure svg{ filter: invert(1) hue-rotate(180deg); }
+    /* the inline callout chips aren't SVG, so darken them by hand */
+    .plain{ background:#10243f; border-color:#1e3a5f; color:#9ec5ff; }
+    .plain b{ color:#9ec5ff; }
+    .g{ background:#14331f; color:#86efac; }
+    .m{ background:#10243f; color:#9ec5ff; }
+    .b{ background:#3a1414; color:#fca5a5; }
   }
 </style>
 </head>

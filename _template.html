@@ -22,7 +22,8 @@
 
   @media (prefers-color-scheme: dark) {
     :root { --ink:#e7e9ec; --muted:#9aa3ad; --line:#2b313a; --bg:#14171c; --card:#1b1f26; }
-    .figure { background:#fff; }
+    .figure { background:#13161a; }
+    .figure img, .figure .mermaid { filter: invert(1) hue-rotate(180deg); }
     pre { background:#1e2127; color:#e6e6e6; }
   }
 </style>

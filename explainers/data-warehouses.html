@@ -62,10 +62,10 @@
   @media print{body{background:#fff}.term,.spine,.player{break-inside:avoid}}
 
   @media (prefers-color-scheme: dark){
-    :root{ --paper:#14171c; --card:#1b1f26; --ink:#e7e9ec; --soft:#aab2bb; --faint:#7e8791; --hair:#2b313a; }
-    /* keep hand-drawn diagrams on a light figure card so they stay readable */
-    figure{ background:#fff; border:1px solid #e2e6ea; border-radius:8px; padding:10px 12px;
-            --ink:#15181C; --soft:#5C6670; --faint:#8A949D; --hair:#D7DCE0; --paper:#F1F3F5; }
+    :root{ --paper:#14171c; --card:#1b1f26; --ink:#e7e9ec; --soft:#aab2bb; --faint:#7e8791;
+           --hair:#343b45; --gray:#6b7680; --gray-fill:#3f474f; }
+    /* near-white "empty cell" fills → dark surface; teal/amber palette kept */
+    rect[fill="#e9edf0"]{ fill:#23272e; }
   }
 </style>
 </head>
