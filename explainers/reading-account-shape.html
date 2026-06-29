@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reading the shape of the work — Explainer</title>
+<style>
+  :root{ --ink:#1f2937; --mut:#6b7280; --line:#e5e7eb; --bg:#ffffff; --soft:#f6f6f4; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--soft); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; line-height:1.65; }
+  .page{ max-width:760px; margin:0 auto; background:var(--bg); padding:64px 56px 72px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .eyebrow{ font-size:13px; letter-spacing:.04em; text-transform:uppercase; color:var(--mut); margin:0 0 14px; }
+  h1{ font-size:30px; font-weight:600; line-height:1.2; margin:0 0 12px; }
+  .dek{ font-size:18px; color:var(--mut); margin:0 0 8px; font-weight:400; }
+  h2{ font-size:21px; font-weight:600; margin:42px 0 10px; }
+  h3{ font-size:17px; font-weight:600; margin:24px 0 4px; }
+  p{ margin:0 0 16px; font-size:16.5px; }
+  .lead{ font-size:18px; }
+  ul,ol{ margin:0 0 16px; padding-left:22px; }
+  li{ margin:0 0 7px; font-size:16.5px; }
+  .eq{ font-size:18px; text-align:center; margin:18px 0; }
+  .eq b{ font-weight:600; }
+  figure{ margin:26px 0; }
+  figure svg{ width:100%; height:auto; display:block; }
+  figcaption{ font-size:13.5px; color:var(--mut); margin-top:8px; text-align:center; }
+  svg text{ font-family:inherit; }
+  .t{ font-size:14px; fill:#1f2937; } .ts{ font-size:12px; fill:#6b7280; } .th{ font-size:14px; font-weight:500; fill:#1f2937; }
+  .box{ background:var(--soft); border:1px solid var(--line); border-radius:10px; padding:16px 20px; margin:22px 0; }
+  .box h3{ margin-top:0; }
+  .plain{ background:#eef4ff; border:1px solid #d6e4ff; border-radius:8px; padding:10px 14px; font-size:14.5px; color:#1d4ed8; margin:-12px 0 26px; }
+  .plain b{ color:#1d4ed8; }
+  .card{ border:1px solid var(--line); border-radius:10px; padding:4px 20px 16px; margin:22px 0; }
+  .pill{ display:inline-block; font-size:12.5px; font-weight:600; padding:2px 9px; border-radius:6px; }
+  .g{ background:#dcfce7; color:#166534; } .m{ background:#dbeafe; color:#1d4ed8; } .b{ background:#fee2e2; color:#b91c1c; }
+  .lbl{ font-size:13px; font-weight:600; color:var(--mut); text-transform:uppercase; letter-spacing:.03em; margin:14px 0 2px; }
+  .rule{ border:none; border-top:1px solid var(--line); margin:40px 0; }
+  .foot{ font-size:13px; color:var(--mut); }
+  code{ background:var(--soft); padding:1px 5px; border-radius:4px; font-size:14px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<a href="../index.html" style="display:inline-block;margin:0 0 14px;color:#6b7280;text-decoration:none;font-size:14px">&larr; All explainers</a>
+<p class="eyebrow">a conceptual explainer</p>
+<h1>Reading the shape of an account</h1>
+<p class="dek">How to tell whether a customer is sticky and where it can grow — from a couple of usage numbers, no SQL required.</p>
+
+<p class="lead">You're good at the selling. This guide is about one thing that trips up everyone new to data: the headline usage number — "models built" — looks like it tells you how valuable and stuck-in a customer is. It doesn't. Two customers can show the same giant number and be completely different bets. Here's how to tell them apart in about five minutes.</p>
+
+<h2>Four words, in plain terms</h2>
+<p>You'll hear these constantly. Here's each one, with a picture.</p>
+
+<h3>Model</h3>
+<p>One transformation step: raw data goes in, a clean table comes out. A model is just a piece of SQL with a name; dbt runs it and saves the result as a table in the warehouse.</p>
+<figure>
+<svg viewBox="0 0 680 170" role="img" aria-label="A SQL model on the left becomes a table in the warehouse on the right after dbt runs it.">
+<defs><marker id="aMod" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text class="ts" x="8" y="20">a model = named SQL</text>
+<rect x="8" y="28" width="300" height="128" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.6"/>
+<text x="22" y="56" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;fill:#1f2937"><tspan fill="#1d4ed8">select</tspan></text>
+<text x="36" y="78" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;fill:#1f2937">customer_id,</text>
+<text x="36" y="100" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;fill:#1f2937">sum(amount) <tspan fill="#1d4ed8">as</tspan> revenue</text>
+<text x="22" y="122" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;fill:#1f2937"><tspan fill="#1d4ed8">from</tspan> orders</text>
+<text x="22" y="144" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;fill:#1f2937"><tspan fill="#1d4ed8">group by</tspan> 1</text>
+<line x1="314" y1="92" x2="372" y2="92" stroke="#94a3b8" stroke-width="1.4" marker-end="url(#aMod)"/>
+<text class="ts" x="343" y="84" text-anchor="middle">dbt run</text>
+<text class="ts" x="392" y="20">a table in the warehouse</text>
+<rect x="392" y="28" width="276" height="128" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="0.6"/>
+<line x1="392" y1="58" x2="668" y2="58" stroke="#cbd5e1" stroke-width="0.6"/>
+<line x1="548" y1="28" x2="548" y2="156" stroke="#eef2f7" stroke-width="1"/>
+<text x="406" y="48" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;fill:#6b7280">customer_id</text>
+<text x="562" y="48" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;fill:#6b7280">revenue</text>
+<text x="406" y="80" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;fill:#1f2937">1001</text><text x="562" y="80" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;fill:#1f2937">4,200</text>
+<text x="406" y="106" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;fill:#1f2937">1002</text><text x="562" y="106" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;fill:#1f2937">980</text>
+<text x="406" y="132" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;fill:#1f2937">1003</text><text x="562" y="132" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;fill:#1f2937">2,310</text>
+</svg>
+<figcaption>dbt takes the SQL on the left and builds the table on the right. That's one model.</figcaption>
+</figure>
+
+<h3>Project</h3>
+<p>The folder of code those models live in — and models depend on each other, so a project is really a web of them. An arrow means "this one is built from that one." A customer can have one project or many.</p>
+<figure>
+<svg viewBox="0 0 680 196" role="img" aria-label="A project containing six models wired by dependency arrows, from raw sources to staging to final tables.">
+<defs><marker id="aProj" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text class="ts" x="8" y="18">one project = many models, wired together (a DAG)</text>
+<rect x="8" y="28" width="664" height="156" rx="8" fill="none" stroke="#cbd5e1" stroke-width="0.6" stroke-dasharray="4 4"/>
+<g stroke="#94a3b8" stroke-width="1" fill="none">
+<line x1="156" y1="67" x2="240" y2="67" marker-end="url(#aProj)"/>
+<line x1="156" y1="131" x2="240" y2="131" marker-end="url(#aProj)"/>
+<line x1="368" y1="67" x2="452" y2="67" marker-end="url(#aProj)"/>
+<line x1="368" y1="131" x2="452" y2="131" marker-end="url(#aProj)"/>
+<line x1="368" y1="124" x2="452" y2="78" marker-end="url(#aProj)"/>
+<line x1="516" y1="82" x2="516" y2="116" marker-end="url(#aProj)"/>
+</g>
+<g>
+<rect x="28" y="52" width="128" height="30" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text x="92" y="71" text-anchor="middle" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;fill:#1f2937">raw_orders</text>
+<rect x="28" y="116" width="128" height="30" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text x="92" y="135" text-anchor="middle" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;fill:#1f2937">raw_customers</text>
+<rect x="240" y="52" width="128" height="30" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text x="304" y="71" text-anchor="middle" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;fill:#1f2937">stg_orders</text>
+<rect x="240" y="116" width="128" height="30" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text x="304" y="135" text-anchor="middle" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;fill:#1f2937">stg_customers</text>
+<rect x="452" y="52" width="128" height="30" rx="5" fill="#dbeafe" stroke="#1d4ed8" stroke-width="0.6"/><text x="516" y="71" text-anchor="middle" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;fill:#1d4ed8">fct_orders</text>
+<rect x="452" y="116" width="128" height="30" rx="5" fill="#dbeafe" stroke="#1d4ed8" stroke-width="0.6"/><text x="516" y="135" text-anchor="middle" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;fill:#1d4ed8">customer_revenue</text>
+</g>
+</svg>
+<figcaption>Each box is a model (the one above is <code>customer_revenue</code>). Arrows show what depends on what. The whole web is the project.</figcaption>
+</figure>
+
+<h3>Environment</h3>
+<p>A "where it runs" setting — a developer's sandbox, an automated test, or production. Same models, same code; an environment just says <i>where</i> this run happens.</p>
+<figure>
+<svg viewBox="0 0 680 186" role="img" aria-label="The same three-model pipeline shown twice: once in a development sandbox and once in scheduled production.">
+<defs><marker id="aEnv" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text class="th" x="8" y="22">Development — a safe sandbox</text>
+<text class="th" x="352" y="22">Production — scheduled, in the cloud</text>
+<rect x="8" y="32" width="320" height="124" rx="8" fill="none" stroke="#cbd5e1" stroke-width="0.6" stroke-dasharray="4 4"/>
+<rect x="352" y="32" width="320" height="124" rx="8" fill="none" stroke="#cbd5e1" stroke-width="0.6" stroke-dasharray="4 4"/>
+<g stroke="#94a3b8" stroke-width="1" fill="none">
+<line x1="104" y1="97" x2="126" y2="97" marker-end="url(#aEnv)"/><line x1="210" y1="97" x2="232" y2="97" marker-end="url(#aEnv)"/>
+<line x1="448" y1="97" x2="470" y2="97" marker-end="url(#aEnv)"/><line x1="554" y1="97" x2="576" y2="97" marker-end="url(#aEnv)"/>
+</g>
+<g>
+<rect x="20" y="84" width="84" height="26" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text x="62" y="101" text-anchor="middle" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;fill:#1f2937">stg_orders</text>
+<rect x="126" y="84" width="84" height="26" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text x="168" y="101" text-anchor="middle" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;fill:#1f2937">fct_orders</text>
+<rect x="232" y="84" width="84" height="26" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text x="274" y="101" text-anchor="middle" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;fill:#1f2937">revenue</text>
+<rect x="364" y="84" width="84" height="26" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text x="406" y="101" text-anchor="middle" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;fill:#1f2937">stg_orders</text>
+<rect x="470" y="84" width="84" height="26" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text x="512" y="101" text-anchor="middle" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;fill:#1f2937">fct_orders</text>
+<rect x="576" y="84" width="84" height="26" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text x="618" y="101" text-anchor="middle" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;fill:#1f2937">revenue</text>
+</g>
+<text class="ts" x="20" y="140">experiment safely — nothing real breaks</text>
+<text class="ts" x="364" y="140">the real, scheduled runs the team relies on</text>
+</svg>
+<figcaption>Same pipeline, two places to run it. dev = try things; prod = the real, scheduled thing.</figcaption>
+</figure>
+<div class="plain"><b>This is the one people get wrong:</b> an environment is a <i>where</i>, not a <i>who</i>. If a dashboard says "60 environments," that is not 60 of their customers.</div>
+
+<h3>Run (or build)</h3>
+<p>One execution. A run tells dbt to build the models once, in dependency order. Every model it builds counts as a "build" — and the headline usage number is just all of those added up over months.</p>
+<figure>
+<svg viewBox="0 0 680 168" role="img" aria-label="A run builds three models in order, counting three builds; repeated on a schedule, the builds add up into the headline usage number.">
+<defs><marker id="aRun" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text class="ts" x="8" y="18">a run builds the models once, in order</text>
+<path d="M14 40 L28 48 L14 56 Z" fill="#1d4ed8"/>
+<text class="ts" x="36" y="52">run</text>
+<g stroke="#94a3b8" stroke-width="1.2" fill="none">
+<line x1="80" y1="48" x2="135" y2="48" marker-end="url(#aRun)"/>
+<line x1="167" y1="48" x2="235" y2="48" marker-end="url(#aRun)"/>
+<line x1="267" y1="48" x2="335" y2="48" marker-end="url(#aRun)"/>
+</g>
+<g>
+<circle cx="151" cy="48" r="14" fill="#dbeafe" stroke="#1d4ed8" stroke-width="0.8"/><text x="151" y="53" text-anchor="middle" style="font-size:13px;fill:#1d4ed8;font-weight:600">1</text>
+<circle cx="251" cy="48" r="14" fill="#dbeafe" stroke="#1d4ed8" stroke-width="0.8"/><text x="251" y="53" text-anchor="middle" style="font-size:13px;fill:#1d4ed8;font-weight:600">2</text>
+<circle cx="351" cy="48" r="14" fill="#dbeafe" stroke="#1d4ed8" stroke-width="0.8"/><text x="351" y="53" text-anchor="middle" style="font-size:13px;fill:#1d4ed8;font-weight:600">3</text>
+</g>
+<text class="ts" x="151" y="80" text-anchor="middle">stg</text><text class="ts" x="251" y="80" text-anchor="middle">fct</text><text class="ts" x="351" y="80" text-anchor="middle">revenue</text>
+<text class="th" x="400" y="53">= 3 models built this run</text>
+<line x1="8" y1="104" x2="672" y2="104" stroke="#e5e7eb" stroke-width="1"/>
+<text class="ts" x="8" y="128">Run it on a schedule, hundreds of times a day, for months…</text>
+<text class="th" x="8" y="150">…and the headline "models built" number is just that running total.</text>
+</svg>
+<figcaption>One run here builds 3 models. Multiply by how often it runs, across months — that's the big number you'll see on a dashboard.</figcaption>
+</figure>
+
+<h2>Why the big number lies</h2>
+<p>A customer's usage number gets large for three different reasons. Which one it is tells you almost everything about whether the account is safe:</p>
+<p class="eq"><b>usage = breadth × fan-out × cadence</b></p>
+<ul>
+  <li><b>Breadth</b> — they model a <i>lot of different things</i> (a big web of steps).</li>
+  <li><b>Fan-out</b> — they run the <i>same</i> work separately for many of their <i>own</i> customers.</li>
+  <li><b>Cadence</b> — they just <i>re-run</i> the same thing very often, because the data goes stale fast.</li>
+</ul>
+<p>Here's the catch: cadence is cheap, and almost everyone with anything close to real-time has a lot of it. Breadth and fan-out are what make a customer hard to replace. So a big number only means "sticky" when breadth or fan-out is driving it. When cadence is driving it, the number is mostly motion — and a smart engineer (or a competitor) can make most of it disappear without losing anything that matters.</p>
+
+<figure>
+<svg viewBox="0 0 700 226" role="img" aria-label="Three customers with the same usage number: a deep web of steps, a grid of identical small copies, and one small chain rerun on a loop.">
+<defs><marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text class="th" x="115" y="22" text-anchor="middle">Deep graph</text><text class="ts" x="115" y="38" text-anchor="middle">they model a lot</text>
+<g stroke="#94a3b8" stroke-width="0.6" fill="none">
+<line x1="45" y1="74" x2="115" y2="66"/><line x1="45" y1="74" x2="115" y2="96"/><line x1="45" y1="104" x2="115" y2="96"/><line x1="45" y1="104" x2="115" y2="126"/><line x1="45" y1="134" x2="115" y2="126"/><line x1="45" y1="134" x2="115" y2="156"/>
+<line x1="115" y1="66" x2="185" y2="84"/><line x1="115" y1="96" x2="185" y2="84"/><line x1="115" y1="126" x2="185" y2="128"/><line x1="115" y1="156" x2="185" y2="128"/>
+</g>
+<g fill="#64748b">
+<circle cx="45" cy="74" r="6"/><circle cx="45" cy="104" r="6"/><circle cx="45" cy="134" r="6"/>
+<circle cx="115" cy="66" r="6"/><circle cx="115" cy="96" r="6"/><circle cx="115" cy="126" r="6"/><circle cx="115" cy="156" r="6"/>
+<circle cx="185" cy="84" r="6"/><circle cx="185" cy="128" r="6"/>
+</g>
+<text class="ts" x="115" y="206" text-anchor="middle">hard to rebuild → sticky</text>
+
+<text class="th" x="350" y="22" text-anchor="middle">Fan-out</text><text class="ts" x="350" y="38" text-anchor="middle">same work, many copies</text>
+<g>
+<rect x="262" y="58" width="56" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.6"/><rect x="322" y="58" width="56" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.6"/><rect x="382" y="58" width="56" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.6"/>
+<rect x="262" y="92" width="56" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.6"/><rect x="322" y="92" width="56" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.6"/><rect x="382" y="92" width="56" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.6"/>
+<rect x="262" y="126" width="56" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.6"/><rect x="322" y="126" width="56" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.6"/><rect x="382" y="126" width="56" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.6"/>
+</g>
+<g fill="#64748b">
+<circle cx="276" cy="69" r="3"/><circle cx="290" cy="69" r="3"/><circle cx="304" cy="69" r="3"/><circle cx="336" cy="69" r="3"/><circle cx="350" cy="69" r="3"/><circle cx="364" cy="69" r="3"/><circle cx="396" cy="69" r="3"/><circle cx="410" cy="69" r="3"/><circle cx="424" cy="69" r="3"/>
+<circle cx="276" cy="103" r="3"/><circle cx="290" cy="103" r="3"/><circle cx="304" cy="103" r="3"/><circle cx="336" cy="103" r="3"/><circle cx="350" cy="103" r="3"/><circle cx="364" cy="103" r="3"/><circle cx="396" cy="103" r="3"/><circle cx="410" cy="103" r="3"/><circle cx="424" cy="103" r="3"/>
+<circle cx="276" cy="137" r="3"/><circle cx="290" cy="137" r="3"/><circle cx="304" cy="137" r="3"/><circle cx="336" cy="137" r="3"/><circle cx="350" cy="137" r="3"/><circle cx="364" cy="137" r="3"/><circle cx="396" cy="137" r="3"/><circle cx="410" cy="137" r="3"/><circle cx="424" cy="137" r="3"/>
+</g>
+<text class="ts" x="350" y="206" text-anchor="middle">inside their product → sticky</text>
+
+<text class="th" x="585" y="22" text-anchor="middle">Refresh mill</text><text class="ts" x="585" y="38" text-anchor="middle">small, but run constantly</text>
+<path d="M650 96 C 650 64, 520 64, 520 96" fill="none" stroke="#dc2626" stroke-width="1.2" marker-end="url(#aR)"/>
+<text class="ts" x="585" y="58" text-anchor="middle">every ~96s</text>
+<g stroke="#94a3b8" stroke-width="1.2" fill="none">
+<line x1="528" y1="110" x2="556" y2="110" marker-end="url(#aR)"/><line x1="566" y1="110" x2="594" y2="110" marker-end="url(#aR)"/><line x1="604" y1="110" x2="632" y2="110" marker-end="url(#aR)"/>
+</g>
+<g fill="#64748b"><circle cx="520" cy="110" r="6"/><circle cx="558" cy="110" r="6"/><circle cx="596" cy="110" r="6"/><circle cx="634" cy="110" r="6"/></g>
+<text class="ts" x="585" y="206" text-anchor="middle">mostly motion → fragile</text>
+</svg>
+<figcaption>Three customers can show the same usage number for these three different reasons. Only the first two mean the account is hard to replace.</figcaption>
+</figure>
+
+<div class="box">
+<h3>Don't get fooled</h3>
+<ul style="margin-bottom:0">
+  <li>A big usage number is not the same as a sticky account.</li>
+  <li>"50 environments" is not 50 customers — environments are run-stages.</li>
+  <li>Lots of projects can be a company's internal sprawl, not a product they sell.</li>
+</ul>
+</div>
+
+<h2>The three shapes, and what to do about each</h2>
+<p>Real examples below. For each: what the business is, what dbt does for them, how to spot the shape, and what it means for your deal.</p>
+
+<h3>Deep graph <span class="pill g">sticky</span></h3>
+<p><b>Example: a marketing-personalization platform.</b> It turns shopper clicks into the audiences and predictions behind many retailers' campaigns. dbt builds the big web of models that feeds the product. The usage is huge because they genuinely model a lot — roughly 500 steps every run.</p>
+
+<figure>
+<svg viewBox="0 0 680 306" role="img" aria-label="Deep graph wiring: one codebase split into shards, run-stage environments, a big web of steps, fanning out to many customer datasets downstream.">
+<defs><marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text class="ts" x="14" y="24">Projects — one codebase split into ~17 pieces (to run faster)</text>
+<g><rect x="14" y="34" width="116" height="38" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text class="th" x="72" y="58" text-anchor="middle">piece 1</text></g>
+<g><rect x="142" y="34" width="116" height="38" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text class="th" x="200" y="58" text-anchor="middle">piece 2</text></g>
+<g><rect x="270" y="34" width="116" height="38" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text class="th" x="328" y="58" text-anchor="middle">piece 3</text></g>
+<g><rect x="398" y="34" width="116" height="38" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text class="th" x="456" y="58" text-anchor="middle">piece 4</text></g>
+<g><rect x="526" y="34" width="116" height="38" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text class="th" x="584" y="58" text-anchor="middle">… ×17</text></g>
+<g><rect x="14" y="82" width="250" height="22" rx="11" fill="#dbeafe"/><text class="ts" x="139" y="97" text-anchor="middle" fill="#1d4ed8">env = Prod · Dev · QA (a stage)</text></g>
+<text class="ts" x="276" y="97">→ not a customer</text>
+<text class="ts" x="14" y="128">Each piece builds one big web — ≈500 steps per run</text>
+<g stroke="#94a3b8" stroke-width="0.6" fill="none">
+<line x1="78" y1="150" x2="228" y2="148"/><line x1="78" y1="150" x2="228" y2="168"/><line x1="78" y1="176" x2="228" y2="168"/><line x1="78" y1="176" x2="228" y2="188"/><line x1="78" y1="202" x2="228" y2="188"/><line x1="78" y1="202" x2="228" y2="208"/>
+<line x1="228" y1="148" x2="400" y2="148"/><line x1="228" y1="168" x2="400" y2="148"/><line x1="228" y1="168" x2="400" y2="168"/><line x1="228" y1="188" x2="400" y2="168"/><line x1="228" y1="188" x2="400" y2="188"/><line x1="228" y1="208" x2="400" y2="188"/><line x1="228" y1="208" x2="400" y2="208"/>
+<line x1="400" y1="148" x2="560" y2="152"/><line x1="400" y1="168" x2="560" y2="152"/><line x1="400" y1="168" x2="560" y2="178"/><line x1="400" y1="188" x2="560" y2="178"/><line x1="400" y1="188" x2="560" y2="204"/><line x1="400" y1="208" x2="560" y2="204"/>
+</g>
+<g fill="#64748b">
+<circle cx="78" cy="150" r="6"/><circle cx="78" cy="176" r="6"/><circle cx="78" cy="202" r="6"/>
+<circle cx="228" cy="148" r="6"/><circle cx="228" cy="168" r="6"/><circle cx="228" cy="188" r="6"/><circle cx="228" cy="208" r="6"/>
+<circle cx="400" cy="148" r="6"/><circle cx="400" cy="168" r="6"/><circle cx="400" cy="188" r="6"/><circle cx="400" cy="208" r="6"/>
+<circle cx="560" cy="152" r="6"/><circle cx="560" cy="178" r="6"/><circle cx="560" cy="204" r="6"/>
+</g>
+<line x1="320" y1="218" x2="320" y2="236" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#aB)" fill="none"/>
+<rect x="14" y="238" width="628" height="44" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/>
+<g fill="#94a3b8">
+<circle cx="52" cy="252" r="2.6"/><circle cx="80" cy="252" r="2.6"/><circle cx="108" cy="252" r="2.6"/><circle cx="136" cy="252" r="2.6"/><circle cx="164" cy="252" r="2.6"/><circle cx="192" cy="252" r="2.6"/><circle cx="220" cy="252" r="2.6"/><circle cx="248" cy="252" r="2.6"/><circle cx="276" cy="252" r="2.6"/><circle cx="304" cy="252" r="2.6"/><circle cx="332" cy="252" r="2.6"/><circle cx="360" cy="252" r="2.6"/><circle cx="388" cy="252" r="2.6"/><circle cx="416" cy="252" r="2.6"/><circle cx="444" cy="252" r="2.6"/><circle cx="472" cy="252" r="2.6"/><circle cx="500" cy="252" r="2.6"/><circle cx="528" cy="252" r="2.6"/><circle cx="556" cy="252" r="2.6"/><circle cx="584" cy="252" r="2.6"/><circle cx="612" cy="252" r="2.6"/>
+</g>
+<text class="th" x="328" y="276" text-anchor="middle">their customers live downstream in the warehouse</text>
+</svg>
+<figcaption>A deep graph: lots of distinct steps wired together, expensive to rebuild elsewhere.</figcaption>
+</figure>
+<div class="plain"><b>In plain terms:</b> the projects and environments here are just code and run-stages. Their own customers aren't projects — they're separate datasets sitting downstream in the warehouse.</div>
+
+<p class="lbl">30-second tell</p>
+<p style="margin-top:0">A high number of steps per run, with only a handful of copies. Big web, not many duplicates.</p>
+<p class="lbl">What it means for your deal</p>
+<p style="margin-top:0">Durable. The work is genuinely hard to rebuild somewhere else. Expand into more teams and use cases. If they grumble about cost, don't panic — the depth is real value; help them tune it, but the account isn't going anywhere quickly.</p>
+
+<h3>Fan-out <span class="pill m">sticky, with a catch</span></h3>
+<p><b>Example: a vertical SaaS serving thousands of small operators.</b> dbt powers the live, in-product analytics each operator sees. It's the <i>same</i> modest pipeline copied across many source systems and customer groups, refreshed hourly. The usage is high because of all the copies, not because any one is big.</p>
+
+<figure>
+<svg viewBox="0 0 680 312" role="img" aria-label="Fan-out wiring: one pipeline per source system, copied and sharded; environments are stages; thousands of end customers are rows inside.">
+<defs><marker id="aRn" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text class="ts" x="14" y="24">Projects — the same pipeline copied per source system, split into chunks</text>
+<g><rect x="14" y="34" width="96" height="48" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text class="th" x="62" y="55" text-anchor="middle">Source A</text><text class="ts" x="62" y="72" text-anchor="middle">×5 copies</text></g>
+<g><rect x="118" y="34" width="96" height="48" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text class="th" x="166" y="55" text-anchor="middle">Source B</text><text class="ts" x="166" y="72" text-anchor="middle">×10 copies</text></g>
+<g><rect x="222" y="34" width="96" height="48" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text class="th" x="270" y="55" text-anchor="middle">Source C</text><text class="ts" x="270" y="72" text-anchor="middle">×4 copies</text></g>
+<g><rect x="326" y="34" width="96" height="48" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text class="th" x="374" y="55" text-anchor="middle">Source D</text><text class="ts" x="374" y="72" text-anchor="middle">×2 copies</text></g>
+<g><rect x="430" y="34" width="96" height="48" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text class="th" x="478" y="55" text-anchor="middle">Source E</text><text class="ts" x="478" y="72" text-anchor="middle">×2 copies</text></g>
+<g><rect x="534" y="34" width="96" height="48" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text class="th" x="582" y="55" text-anchor="middle">Other</text><text class="ts" x="582" y="72" text-anchor="middle">×7</text></g>
+<text class="ts" x="14" y="112">Open one copy:</text>
+<path d="M62 82 C 62 100, 200 102, 200 120" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#aRn)" fill="none"/>
+<rect x="180" y="120" width="360" height="60" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/>
+<text class="ts" x="198" y="138">same handful of steps, every time</text>
+<g stroke="#94a3b8" stroke-width="1.2" fill="none"><line x1="212" y1="160" x2="244" y2="160" marker-end="url(#aRn)"/><line x1="256" y1="160" x2="288" y2="160" marker-end="url(#aRn)"/><line x1="300" y1="160" x2="332" y2="160" marker-end="url(#aRn)"/></g>
+<g fill="#64748b"><circle cx="206" cy="160" r="6"/><circle cx="250" cy="160" r="6"/><circle cx="294" cy="160" r="6"/><circle cx="338" cy="160" r="6"/></g>
+<text class="ts" x="376" y="164">≈65 steps / run</text>
+<line x1="360" y1="180" x2="360" y2="196" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#aRn)" fill="none"/>
+<rect x="14" y="198" width="628" height="38" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/>
+<text class="th" x="328" y="222" text-anchor="middle">thousands of end customers = rows inside these copies</text>
+<text class="ts" x="14" y="262">Environments (run-stages, not customers):</text>
+<g><rect x="14" y="270" width="46" height="22" rx="11" fill="#dbeafe"/><text class="ts" x="37" y="285" text-anchor="middle" fill="#1d4ed8">CI</text></g>
+<g><rect x="68" y="270" width="96" height="22" rx="11" fill="#dbeafe"/><text class="ts" x="116" y="285" text-anchor="middle" fill="#1d4ed8">Production</text></g>
+<g><rect x="172" y="270" width="142" height="22" rx="11" fill="#dcfce7"/><text class="ts" x="243" y="285" text-anchor="middle" fill="#166534">Production Fusion</text></g>
+<g><rect x="322" y="270" width="100" height="22" rx="11" fill="#dcfce7"/><text class="ts" x="372" y="285" text-anchor="middle" fill="#166534">Microbatch</text></g>
+<text class="ts" x="430" y="285">← already optimizing</text>
+</svg>
+<figcaption>Fan-out: the same small pipeline, copied many times, running inside a live product.</figcaption>
+</figure>
+<div class="plain"><b>In plain terms:</b> each box is a copy of similar logic, not a customer. Their 3,000 end-customers are rows inside the copies. The number is big because of the copies and the hourly refresh — not because any one copy is large.</div>
+
+<p class="lbl">30-second tell</p>
+<p style="margin-top:0">Many similar projects or jobs, each modest in size, often refreshed hourly. Lots of duplicates of the same thing.</p>
+<p class="lbl">What it means for your deal</p>
+<p style="margin-top:0">Durable, because it sits inside a product their customers depend on — and it grows as <i>their</i> customer base grows, which is the best kind of expansion. The catch: this shape often has heavy usage on very few seats, which can spark a pricing disagreement. Get ahead of that, and look for chances to help them tidy the duplication.</p>
+
+<h3>Refresh mill <span class="pill b">fragile</span></h3>
+<p><b>Example: a real-time lead marketplace.</b> A record is worthless seconds after it arrives, so one small pipeline gets re-run every ~96 seconds. The usage looks enormous, but it's a tiny thing run constantly — almost no breadth, almost no copies.</p>
+
+<figure>
+<svg viewBox="0 0 680 282" role="img" aria-label="Refresh-mill wiring: one small pipeline, stage-only environments, rerun about every 96 seconds, all customers as rows in one warehouse.">
+<defs><marker id="aS" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text class="ts" x="14" y="24">Projects — one small codebase, a couple of copies</text>
+<g><rect x="14" y="34" width="206" height="44" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text class="th" x="117" y="56" text-anchor="middle">main warehouse</text><text class="ts" x="117" y="71" text-anchor="middle">small</text></g>
+<g><rect x="230" y="34" width="214" height="44" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text class="th" x="337" y="56" text-anchor="middle">its source layer</text><text class="ts" x="337" y="71" text-anchor="middle">small</text></g>
+<g><rect x="454" y="34" width="188" height="44" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/><text class="th" x="548" y="56" text-anchor="middle">+ dev copies</text><text class="ts" x="548" y="71" text-anchor="middle"> </text></g>
+<g><rect x="14" y="86" width="120" height="22" rx="11" fill="#dbeafe"/><text class="ts" x="74" y="101" text-anchor="middle" fill="#1d4ed8">prod · dev stages</text></g>
+<text class="ts" x="146" y="101">→ not customers</text>
+<text class="ts" x="14" y="130">One small pipeline, rerun constantly:</text>
+<text class="th" x="356" y="152" text-anchor="middle">× ~900 runs / day  (~every 96 s)</text>
+<path d="M462 176 C 462 158, 250 158, 250 176" fill="none" stroke="#dc2626" stroke-width="1.2" marker-end="url(#aS)"/>
+<g stroke="#94a3b8" stroke-width="1.2" fill="none">
+<line x1="258" y1="190" x2="312" y2="190" marker-end="url(#aS)"/><line x1="328" y1="190" x2="382" y2="190" marker-end="url(#aS)"/><line x1="398" y1="190" x2="454" y2="190" marker-end="url(#aS)"/>
+</g>
+<g fill="#64748b"><circle cx="250" cy="190" r="6"/><circle cx="320" cy="190" r="6"/><circle cx="390" cy="190" r="6"/><circle cx="462" cy="190" r="6"/></g>
+<line x1="356" y1="200" x2="356" y2="214" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#aS)" fill="none"/>
+<rect x="14" y="216" width="628" height="40" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.6"/>
+<text class="th" x="328" y="240" text-anchor="middle">all customers are rows in one warehouse — no copies</text>
+</svg>
+<figcaption>A refresh mill: one small pipeline rerun on a fast clock. The big number is mostly the clock.</figcaption>
+</figure>
+<div class="plain"><b>In plain terms:</b> there's very little here — a small pipeline, no copies. The reason it's a big number is purely how often it re-runs. There's a setting (only rebuild what changed, rather than everything) that could shrink this — and shrink the bill with it.</div>
+
+<p class="lbl">30-second tell</p>
+<p style="margin-top:0">Small size, few copies, but a very high run frequency. Lots of motion, not much there.</p>
+<p class="lbl">What it means for your deal</p>
+<p style="margin-top:0">Fragile. The big number is mostly busywork an engineer can optimize away — and if usage is how we price them, that shrinks the deal. Don't read the number as safety. Get in front of it: offer to help them run more efficiently before they find out on their own and pull back.</p>
+
+<hr class="rule">
+
+<h2>Read any account in five minutes</h2>
+<ol>
+  <li>What does the business do — and does dbt feed something <i>their</i> customers see, or just internal reporting?</li>
+  <li>Is the big number coming from breadth (lots of different steps), fan-out (many copies), or cadence (frequent re-runs)? If you can't see it, your SA or CSM can pull three numbers: steps-per-run, project/environment counts, and runs-per-day.</li>
+  <li>Ask yourself: if their re-run frequency dropped tomorrow, would the value mostly stay (sticky) or mostly vanish (fragile)?</li>
+  <li>Don't count environments as customers.</li>
+  <li>Match it to a shape above, and use the "what it means for your deal" line.</li>
+</ol>
+
+<div class="box">
+<h3>The one-sentence version</h3>
+<p style="margin-bottom:0">A big usage number can mean a customer is deeply built-in, or it can mean they're doing the same small thing over and over — and those are opposite situations. Look at the <i>shape</i>, not just the size.</p>
+</div>
+
+<hr class="rule">
+<p class="foot">The numbers and examples here are real but kept simple, pulled from internal usage analytics. You don't need to reproduce them — your SA or CSM can get the steps-per-run, project and environment counts, and run frequency for any account you're working.</p>
+
+</div>
+</body>
+</html>
