@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>A short primer on how data warehouses are built</title>
+<style>
+  :root{
+    --paper:#F1F3F5;
+    --card:#FFFFFF;
+    --ink:#15181C;
+    --soft:#5C6670;
+    --faint:#8A949D;
+    --hair:#D7DCE0;
+    --teal:#157A57; --teal-fill:#1D9E75;     /* compute */
+    --gray:#94A0A6; --gray-fill:#CDD5D8;      /* storage */
+    --amber:#B07D1E; --amber-fill:#E0B85C;    /* shuffle / intermediate */
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:780px;margin:0 auto;padding:54px 26px 110px}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);margin:0 0 16px}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(32px,6vw,50px);line-height:1.05;letter-spacing:-.01em;margin:0 0 16px}
+  .dek{font-size:19px;color:var(--soft);margin:0;max-width:54ch}
+  .dek em{color:var(--ink);font-style:italic}
+  .part{font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--soft);margin:54px 0 8px;padding-top:26px;border-top:2px solid var(--ink)}
+  .part .n{color:var(--teal)}
+  h2{font-family:var(--serif);font-weight:600;font-size:26px;margin:0 0 24px;letter-spacing:-.01em}
+  /* glossary entry */
+  .term{padding:22px 0;border-top:1px solid var(--hair);display:grid;grid-template-columns:1fr;gap:6px}
+  .term:last-child{border-bottom:1px solid var(--hair)}
+  .term h3{font-family:var(--serif);font-weight:600;font-size:21px;margin:0;display:flex;align-items:baseline;flex-wrap:wrap;gap:10px}
+  .term h3 .aka{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:400}
+  .term p{margin:4px 0 0}
+  .term p + p{margin-top:10px}
+  figure{margin:16px 0 2px}
+  figcaption{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-top:7px;line-height:1.5}
+  svg{display:block;max-width:100%;height:auto}
+  .spine{background:var(--card);border:1px solid var(--hair);border-radius:4px;padding:26px 28px;margin:30px 0}
+  .spine p{margin:0}
+  .spine p + p{margin-top:12px}
+  .legend{font-family:var(--mono);font-size:11.5px;color:var(--soft);display:flex;flex-wrap:wrap;gap:18px;align-items:center;margin:6px 0 30px}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .sw{width:14px;height:14px;border-radius:3px;display:inline-block}
+  .players{border-top:1px solid var(--hair)}
+  .player{display:grid;grid-template-columns:72px 1fr;gap:18px;align-items:center;padding:18px 0;border-bottom:1px solid var(--hair)}
+  .player h3{font-family:var(--serif);font-size:19px;margin:0 0 2px;font-weight:600}
+  .player p{margin:0;font-size:15.5px;color:var(--soft)}
+  .player p b{color:var(--ink);font-weight:600}
+  .end{font-size:15px;color:var(--soft);font-style:italic;border-top:1px solid var(--hair);margin-top:46px;padding-top:22px}
+  b.t{color:var(--teal)} b.g{color:#6f7a80} b.a{color:var(--amber)}
+  .term code{font-family:var(--mono);font-size:14px;background:var(--paper);border:1px solid var(--hair);padding:1px 5px;border-radius:3px}
+  .term p.note{color:var(--soft);font-size:15.5px;margin-top:14px}
+  @media (max-width:540px){
+    body{font-size:16px}
+    .player{grid-template-columns:60px 1fr;gap:14px}
+  }
+  @media print{body{background:#fff}.term,.spine,.player{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">a conceptual primer</p>
+  <h1>How data warehouses are built</h1>
+  <p class="dek">The macro grain, not the day-to-day. Like a chemist reading a little quantum mechanics — you won't use most of it on Tuesday, but it makes the whole field stop being a wall of logos and <em>start being legible</em>.</p>
+  <div class="spine">
+    <p>One idea sits underneath everything below. A computer does exactly two things with data: it <b class="g">holds</b> bytes, and it <b class="t">does arithmetic</b> on them. Those are two different pieces of hardware — a disk that stores and can't think, a processor that thinks and can't store. They pass bytes back and forth.</p>
+    <p>Every system in this glossary — every warehouse, every engine, every buzzword — is just a different answer to two questions: <strong>how far apart are those two pieces, and how is the work split between machines.</strong> Hold that and the rest is vocabulary.</p>
+  </div>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--gray-fill);border:1px solid var(--gray)"></span> storage — holds bytes</span>
+    <span><span class="sw" style="background:var(--teal-fill);border:1px solid var(--teal)"></span> compute — does math</span>
+    <span><span class="sw" style="background:var(--amber-fill);border:1px solid var(--amber)"></span> shuffle — data in flight</span>
+  </div>
+  <!-- ====================== PART I ====================== -->
+  <p class="part"><span class="n">Part I.</span> &nbsp;The physics</p>
+  <h2>What the machine is actually doing</h2>
+  <div class="term">
+    <h3>OLTP vs OLAP <span class="aka">two opposite jobs</span></h3>
+    <p>Databases come in two flavours for two opposite jobs. <strong>OLTP</strong> (transactional) is built to grab and update <em>one record</em> — one customer, one order — fast. <strong>OLAP</strong> (analytical) is built to scan <em>millions of rows</em> and total a column. Everything in this primer is the OLAP world. The machinery that's good at one is bad at the other, which is why analytics got its own kind of database.</p>
+  </div>
+  <div class="term">
+    <h3>Storage</h3>
+    <p>Where the bytes sit at rest. Cheap, patient, and unable to compute — it only hands over data when asked. "Run a query on storage" is a category error, like running a calculation on a filing cabinet.</p>
+  </div>
+  <div class="term">
+    <h3>Compute</h3>
+    <p>The brain that reads bytes and does the arithmetic. It's also the part that costs money to run — when people say "our warehouse bill," they mean compute time. Storage is pennies; compute is the invoice.</p>
+  </div>
+  <div class="term">
+    <h3>Distance <span class="aka">near / far</span></h3>
+    <p>How far the bytes travel from storage to compute. <strong>Near</strong> — both on one machine — and the trip is inches and instant. <strong>Far</strong> — storage in one place, brain in another, talking over a network — and there's a round trip on every query. Distance is the hidden variable that explains most of the cost and most of the "feel" of a system.</p>
+    <figure>
+      <svg viewBox="0 0 680 92" role="img" aria-label="Near: storage and compute touching. Far: storage and compute separated by a network line.">
+        <rect x="40" y="26" width="92" height="40" rx="5" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="132" y="26" width="92" height="40" rx="5" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <text x="132" y="84" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--soft)">near · inches</text>
+        <rect x="380" y="26" width="92" height="40" rx="5" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="568" y="26" width="92" height="40" rx="5" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <line x1="472" y1="46" x2="566" y2="46" stroke="var(--soft)" stroke-width="1.3" stroke-dasharray="5 4"/>
+        <text x="519" y="38" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--soft)">network</text>
+        <text x="520" y="84" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--soft)">far · miles</text>
+      </svg>
+    </figure>
+  </div>
+  <div class="term">
+    <h3>Columnar storage <span class="aka">why analytics is fast</span></h3>
+    <p>A normal (transactional) database stores data row by row — all of customer 1001's fields together. An analytical engine flips it: it stores each <em>column</em> together. So a query that totals one column reads just that column's bytes, not the whole table — and a column of one data type compresses hard. This single trick is most of why scanning a billion rows is bearable.</p>
+    <figure>
+      <svg viewBox="0 0 680 140" role="img" aria-label="Row storage keeps each record together; columnar storage keeps each field together.">
+        <text x="20" y="20" font-family="var(--mono)" font-size="11" fill="var(--soft)">row store — records together</text>
+        <g>
+          <rect x="20" y="32" width="240" height="18" fill="#e9edf0" stroke="var(--hair)"/>
+          <rect x="20" y="32" width="80" height="18" fill="var(--gray-fill)" stroke="var(--gray)"/>
+          <rect x="20" y="52" width="240" height="18" fill="#e9edf0" stroke="var(--hair)"/>
+          <rect x="20" y="72" width="240" height="18" fill="#e9edf0" stroke="var(--hair)"/>
+          <text x="60" y="45" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--ink)">row 1</text>
+        </g>
+        <text x="20" y="118" font-family="var(--mono)" font-size="10.5" fill="var(--faint)">read one row → easy · read one column → touch everything</text>
+        <text x="400" y="20" font-family="var(--mono)" font-size="11" fill="var(--soft)">columnar — fields together</text>
+        <g>
+          <rect x="400" y="32" width="60" height="58" fill="var(--teal-fill)" stroke="var(--teal)" opacity="0.9"/>
+          <rect x="462" y="32" width="60" height="58" fill="#e9edf0" stroke="var(--hair)"/>
+          <rect x="524" y="32" width="60" height="58" fill="#e9edf0" stroke="var(--hair)"/>
+          <rect x="586" y="32" width="60" height="58" fill="#e9edf0" stroke="var(--hair)"/>
+          <text x="430" y="64" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="#fff">col A</text>
+        </g>
+        <text x="400" y="118" font-family="var(--mono)" font-size="10.5" fill="var(--faint)">read one column → read only those bytes · compresses well</text>
+      </svg>
+    </figure>
+  </div>
+  <div class="term">
+    <h3>Vectorized execution <span class="aka">two ideas in one word</span></h3>
+    <p>The fast trick, and the one most worth getting right — because the word hides two ideas. Start with what's <em>not</em> expensive: adding two numbers is a single CPU cycle. The expensive part is the bookkeeping around each add — which operator am I in, what type is this column, is the value null, find the right function, advance the pointer, call, return. That paperwork can cost ten to a hundred times the arithmetic it wraps.</p>
+    <p>An old row-at-a-time engine pays that paperwork <strong>once per row</strong>. A billion rows, a billion rounds of it — the processor spends almost all its time shuffling forms and almost none doing math. Vectorized execution hands each step a <strong>batch</strong> instead: a contiguous run of about a thousand values from one column. The bookkeeping is paid once for the whole batch, then a tight loop does nothing but the arithmetic. Same math, the overhead divided by a thousand.</p>
+    <figure>
+      <svg viewBox="0 0 680 296" role="img" aria-label="Row-at-a-time repeats a big overhead block and a sliver of math per row; vectorized pays overhead once per batch then runs a long stretch of math; SIMD does eight results in one instruction.">
+        <defs>
+          <marker id="vecarrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="var(--soft)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+        </defs>
+        <rect x="180" y="36" width="14" height="14" rx="3" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <text x="200" y="44" font-family="var(--mono)" font-size="11" fill="var(--soft)" dominant-baseline="central">overhead — bookkeeping</text>
+        <rect x="392" y="36" width="14" height="14" rx="3" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <text x="412" y="44" font-family="var(--mono)" font-size="11" fill="var(--soft)" dominant-baseline="central">actual math</text>
+        <text x="40" y="84" font-family="var(--mono)" font-size="12" fill="var(--ink)" dominant-baseline="central">row at a time</text>
+        <rect x="180" y="70" width="64" height="28" rx="3" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="244" y="70" width="8" height="28" rx="1" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="260" y="70" width="64" height="28" rx="3" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="324" y="70" width="8" height="28" rx="1" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="340" y="70" width="64" height="28" rx="3" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="404" y="70" width="8" height="28" rx="1" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="420" y="70" width="64" height="28" rx="3" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="484" y="70" width="8" height="28" rx="1" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="500" y="70" width="64" height="28" rx="3" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="564" y="70" width="8" height="28" rx="1" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <text x="590" y="84" font-family="var(--mono)" font-size="12" fill="var(--soft)" dominant-baseline="central">…</text>
+        <text x="400" y="116" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--soft)" dominant-baseline="central">overhead paid once per row → mostly bookkeeping</text>
+        <text x="40" y="146" font-family="var(--mono)" font-size="12" fill="var(--ink)" dominant-baseline="central">vectorized</text>
+        <text x="309" y="126" text-anchor="middle" font-family="var(--mono)" font-size="10.5" fill="var(--faint)" dominant-baseline="central">1 batch ≈ 1,024 rows</text>
+        <rect x="180" y="132" width="64" height="28" rx="3" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="244" y="132" width="130" height="28" rx="3" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="400" y="132" width="64" height="28" rx="3" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="464" y="132" width="130" height="28" rx="3" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <text x="612" y="146" font-family="var(--mono)" font-size="12" fill="var(--soft)" dominant-baseline="central">…</text>
+        <text x="400" y="178" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--soft)" dominant-baseline="central">overhead paid once per batch → mostly math</text>
+        <line x1="40" y1="200" x2="640" y2="200" stroke="var(--hair)" stroke-width="1"/>
+        <text x="40" y="224" font-family="var(--mono)" font-size="12" fill="var(--ink)" dominant-baseline="central">SIMD — the CPU adds in bulk</text>
+        <rect x="150" y="240" width="64" height="26" rx="4" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <text x="182" y="253" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="#063b2c" dominant-baseline="central">one +</text>
+        <line x1="216" y1="253" x2="262" y2="253" stroke="var(--soft)" stroke-width="1.4" marker-end="url(#vecarrow)"/>
+        <rect x="272" y="245" width="16" height="16" rx="2" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="292" y="245" width="16" height="16" rx="2" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="312" y="245" width="16" height="16" rx="2" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="332" y="245" width="16" height="16" rx="2" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="352" y="245" width="16" height="16" rx="2" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="372" y="245" width="16" height="16" rx="2" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="392" y="245" width="16" height="16" rx="2" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="412" y="245" width="16" height="16" rx="2" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <text x="440" y="253" font-family="var(--mono)" font-size="11" fill="var(--soft)" dominant-baseline="central">8 results at once · like numpy a + b</text>
+      </svg>
+      <figcaption>Same arithmetic in both lanes. The difference is how often you pay the bookkeeping — per row, or per thousand.</figcaption>
+    </figure>
+    <p>The everyday version, if you've used arrays: row-at-a-time is a Python <code>for</code> loop adding scalars one at a time; vectorized is <code>a + b</code> on two numpy arrays. Identical math, but the per-element overhead vanishes because you hand the whole array to one routine that knows it's all the same operation. And there's a second idea hiding in the word — once you're looping over a contiguous array, the CPU can apply one instruction to 8 or 16 values at once (<strong>SIMD</strong>, a literal vector operation in hardware). "Vector" earns its name twice: a vector of values, and a vector instruction.</p>
+    <p class="note">None of this works without columnar storage, above. The values have to sit next to each other in memory, all one type, for the tight loop and the SIMD to bite — row storage scatters them. Columnar lays the data out in long typed runs; vectorization chews the runs in bulk. The two entries are really one idea seen from two ends.</p>
+  </div>
+  <!-- ====================== PART II ====================== -->
+  <p class="part"><span class="n">Part II.</span> &nbsp;The arc</p>
+  <h2>How the design changed, and changed back</h2>
+  <figure style="margin:8px 0 34px">
+    <svg viewBox="0 0 680 150" role="img" aria-label="A timeline: fused MPP, then separated cloud warehouse, then disaggregated serverless, then a single-node revival.">
+      <line x1="40" y1="96" x2="652" y2="96" stroke="var(--hair)" stroke-width="1.5"/>
+      <!-- 1 fused -->
+      <g>
+        <rect x="44" y="60" width="34" height="14" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="44" y="74" width="34" height="14" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <circle cx="61" cy="96" r="4" fill="var(--ink)"/>
+        <text x="61" y="120" text-anchor="middle" font-family="var(--mono)" font-size="10.5" fill="var(--ink)">fused</text>
+        <text x="61" y="134" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--faint)">MPP</text>
+      </g>
+      <!-- 2 separated -->
+      <g>
+        <rect x="222" y="56" width="44" height="14" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="222" y="82" width="44" height="14" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <line x1="244" y1="70" x2="244" y2="82" stroke="var(--soft)" stroke-dasharray="3 3"/>
+        <circle cx="244" cy="96" r="4" fill="var(--ink)"/>
+        <text x="244" y="120" text-anchor="middle" font-family="var(--mono)" font-size="10.5" fill="var(--ink)">separated</text>
+        <text x="244" y="134" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--faint)">cloud warehouse</text>
+      </g>
+      <!-- 3 disaggregated -->
+      <g>
+        <rect x="408" y="52" width="13" height="13" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="424" y="52" width="13" height="13" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="440" y="52" width="13" height="13" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="414" y="68" width="33" height="9" fill="var(--amber-fill)" stroke="var(--amber)"/>
+        <rect x="408" y="82" width="45" height="14" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <circle cx="430" cy="96" r="4" fill="var(--ink)"/>
+        <text x="430" y="120" text-anchor="middle" font-family="var(--mono)" font-size="10.5" fill="var(--ink)">disaggregated</text>
+        <text x="430" y="134" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--faint)">serverless + shuffle</text>
+      </g>
+      <!-- 4 single node revival -->
+      <g>
+        <rect x="600" y="68" width="34" height="13" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="600" y="81" width="34" height="13" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <circle cx="617" cy="96" r="4" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <text x="617" y="120" text-anchor="middle" font-family="var(--mono)" font-size="10.5" fill="var(--ink)">re-fused</text>
+        <text x="617" y="134" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--faint)">single-node revival</text>
+      </g>
+      <text x="40" y="26" font-family="var(--mono)" font-size="10" fill="var(--faint)">~1990s</text>
+      <text x="652" y="26" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--faint)">~now</text>
+    </svg>
+    <figcaption>The pendulum: bytes and brain welded together, pulled apart, pulled apart further — then, for a large class of workloads, welded back onto one machine.</figcaption>
+  </figure>
+  <div class="term">
+    <h3>Coupled architecture <span class="aka">MPP · the old way</span></h3>
+    <p>For decades a warehouse was a cluster of machines that each held <em>both</em> storage and compute, welded together — "massively parallel processing," MPP (Teradata, early Redshift, on-prem Oracle). To get more of either, you bought more whole nodes. Need more room to store? You also bought processors you may not need, and vice versa. The two scaled together because they were the same hardware. That bundling is the thing the next era broke.</p>
+    <figure>
+      <svg viewBox="0 0 680 96" role="img" aria-label="MPP: several identical nodes, each with storage and compute fused; scaling means adding more identical nodes.">
+        <g>
+          <rect x="40" y="24" width="70" height="22" fill="var(--gray-fill)" stroke="var(--gray)"/>
+          <rect x="40" y="46" width="70" height="22" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        </g>
+        <g>
+          <rect x="124" y="24" width="70" height="22" fill="var(--gray-fill)" stroke="var(--gray)"/>
+          <rect x="124" y="46" width="70" height="22" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        </g>
+        <g>
+          <rect x="208" y="24" width="70" height="22" fill="var(--gray-fill)" stroke="var(--gray)"/>
+          <rect x="208" y="46" width="70" height="22" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        </g>
+        <text x="300" y="50" font-family="var(--mono)" font-size="22" fill="var(--faint)">+</text>
+        <text x="330" y="50" font-family="var(--mono)" font-size="11" fill="var(--soft)">scale = add more identical boxes</text>
+        <text x="40" y="86" font-family="var(--mono)" font-size="10.5" fill="var(--faint)">storage and compute married inside every node</text>
+      </svg>
+    </figure>
+  </div>
+  <div class="term">
+    <h3>Separation of storage and compute <span class="aka">the cloud shift, ~2012</span></h3>
+    <p>The defining move of the modern era (Snowflake's idea, roughly 2012). Put all the data in cheap shared cloud storage; rent the brains <em>separately</em>, by the second. A query wakes up some compute, reads the data over the network, returns the answer, and the compute goes back to sleep. Now you store a fortune of data for pocket change and pay for thinking only while thinking happens. The cost: the data now lives <em>far</em> from the brain — every query is a network round trip, and the meter runs on it.</p>
+    <figure>
+      <svg viewBox="0 0 680 130" role="img" aria-label="Separation: shared storage at the bottom, separate rentable compute clusters on top, connected over a network.">
+        <rect x="40" y="92" width="600" height="30" rx="5" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <text x="340" y="111" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--ink)">shared cloud storage · cheap · infinite · can't compute</text>
+        <rect x="90" y="24" width="120" height="30" rx="5" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="470" y="24" width="120" height="30" rx="5" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <text x="150" y="44" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#fff">compute A</text>
+        <text x="530" y="44" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#fff">compute B</text>
+        <line x1="150" y1="54" x2="200" y2="90" stroke="var(--soft)" stroke-width="1.2" stroke-dasharray="5 4"/>
+        <line x1="530" y1="54" x2="480" y2="90" stroke="var(--soft)" stroke-width="1.2" stroke-dasharray="5 4"/>
+        <text x="340" y="76" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--soft)">rent brains by the second · turn on, turn off</text>
+      </svg>
+    </figure>
+  </div>
+  <div class="term">
+    <h3>Object storage <span class="aka">S3, GCS, Colossus</span></h3>
+    <p>The "cheap shared storage" above has a name: object storage. It keeps files (objects) on someone else's near-infinite disk, durable and dirt-cheap, reachable over the network — and, importantly, it cannot run a query. It only serves bytes. Amazon's is S3; Google's is Colossus. It's the floor the whole separated era is built on.</p>
+  </div>
+  <div class="term">
+    <h3>Elasticity</h3>
+    <p>Once compute is separate, you can resize it. A small report wakes a small brain; a heavy job wakes a big one; idle time costs nothing. "Elasticity" is just this — paying for compute that grows and shrinks with the work, instead of a fixed box sized for your worst day.</p>
+  </div>
+  <div class="term">
+    <h3>Serverless <span class="aka">no cluster to manage</span></h3>
+    <p>One step further: you never even pick or start a compute cluster. You hand the system a query and it grabs whatever slices of a giant shared pool it needs, sub-second, then hands them back (Google's BigQuery is the clearest example; it calls the slices "slots"). "Serverless" doesn't mean no servers — it means the servers are invisible to you and rented per-query from a crowd.</p>
+  </div>
+  <div class="term">
+    <h3>Shuffle tier <span class="aka">the disaggregated middle</span></h3>
+    <p>A query runs in stages — scan, then join, then total — and between stages the data has to be rearranged ("shuffled") so the right rows land on the right worker. Most systems keep that in-flight data <em>on the workers</em>, which pins the worker count for the whole query. The newest design pulls the shuffle out into its <em>own</em> service, owned by no worker. Because nothing is pinned, the system can use a different number of workers at every stage. Storage was already separate; compute was already separate; this separates the transient middle too.</p>
+    <figure>
+      <svg viewBox="0 0 680 130" role="img" aria-label="Detached shuffle: stages with different worker counts, separated by an amber shuffle tier that no worker owns.">
+        <text x="92" y="20" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--soft)">stage 1 · 5</text>
+        <text x="340" y="20" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--soft)">stage 2 · 2</text>
+        <text x="588" y="20" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--soft)">stage 3 · 3</text>
+        <g fill="var(--teal-fill)" stroke="var(--teal)">
+          <circle cx="92" cy="40" r="8"/><circle cx="92" cy="62" r="8"/><circle cx="92" cy="84" r="8"/><circle cx="92" cy="106" r="8"/><circle cx="74" cy="73" r="8"/>
+        </g>
+        <rect x="180" y="32" width="20" height="82" rx="4" fill="var(--amber-fill)" stroke="var(--amber)"/>
+        <text x="190" y="126" text-anchor="middle" font-family="var(--mono)" font-size="9.5" fill="var(--amber)">shuffle</text>
+        <g fill="var(--teal-fill)" stroke="var(--teal)">
+          <circle cx="340" cy="62" r="8"/><circle cx="340" cy="84" r="8"/>
+        </g>
+        <rect x="430" y="32" width="20" height="82" rx="4" fill="var(--amber-fill)" stroke="var(--amber)"/>
+        <text x="440" y="126" text-anchor="middle" font-family="var(--mono)" font-size="9.5" fill="var(--amber)">shuffle</text>
+        <g fill="var(--teal-fill)" stroke="var(--teal)">
+          <circle cx="588" cy="52" r="8"/><circle cx="588" cy="73" r="8"/><circle cx="588" cy="94" r="8"/>
+        </g>
+        <text x="660" y="126" text-anchor="end" font-family="var(--mono)" font-size="9.5" fill="var(--faint)">no worker owns the middle</text>
+      </svg>
+    </figure>
+  </div>
+  <div class="term">
+    <h3>Lakehouse &amp; open table formats <span class="aka">Iceberg, Delta, Parquet</span></h3>
+    <p>A "data lake" was a cheap pile of raw files in object storage; a "warehouse" was the clean, queryable thing. The <strong>lakehouse</strong> merges them: keep the data as open files in your own storage, but in a format that behaves like proper warehouse tables (Iceberg, Delta Lake, built on Parquet). The point is portability — your data isn't trapped inside one vendor's proprietary format, so the compute engine on top becomes swappable. This is the main axis of the Snowflake-vs-Databricks fight: how open and portable the data underneath is.</p>
+  </div>
+  <div class="term">
+    <h3>The single-node revival <span class="aka">"big data is dead"</span></h3>
+    <p>The plot twist. Laptops and single servers got huge — dozens of cores, tons of memory — while it turned out most companies' working data is gigabytes, not petabytes. So a counter-movement asks: if your hot data fits on one machine, why ship every query across a network to a rented cluster? Re-fuse storage and compute on a single node and the bytes travel inches again, free. The argument was made bluntly in an essay titled "Big Data Is Dead." It doesn't kill the distributed warehouse — it just says most workloads never needed one.</p>
+    <figure>
+      <svg viewBox="0 0 680 80" role="img" aria-label="Single node: storage and compute re-fused on one machine, bytes travel inches.">
+        <rect x="270" y="20" width="70" height="20" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="270" y="40" width="70" height="20" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <text x="356" y="44" font-family="var(--mono)" font-size="11" fill="var(--soft)">one machine · inches · free</text>
+      </svg>
+    </figure>
+  </div>
+  <!-- ====================== PART III ====================== -->
+  <p class="part"><span class="n">Part III.</span> &nbsp;The players</p>
+  <h2>Where each name sits</h2>
+  <p style="color:var(--soft);margin:0 0 8px">Same two bodies, different wiring. The little schematic shows where storage and compute sit for each.</p>
+  <div class="players">
+    <div class="player">
+      <svg width="60" height="44" viewBox="0 0 60 44" aria-hidden="true">
+        <rect x="6" y="4" width="48" height="14" rx="3" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="6" y="26" width="48" height="14" rx="3" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <line x1="30" y1="18" x2="30" y2="26" stroke="var(--soft)" stroke-dasharray="3 3"/>
+      </svg>
+      <div><h3>Snowflake</h3><p>The company that popularised <b>separating storage and compute</b> in the cloud. Data in object storage; you start sized "virtual warehouses" of compute on demand. SQL-first, warehouse heritage.</p></div>
+    </div>
+    <div class="player">
+      <svg width="60" height="44" viewBox="0 0 60 44" aria-hidden="true">
+        <rect x="6" y="2" width="11" height="11" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="20" y="2" width="11" height="11" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="34" y="2" width="11" height="11" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="13" y="17" width="32" height="8" fill="var(--amber-fill)" stroke="var(--amber)"/>
+        <rect x="6" y="29" width="48" height="12" fill="var(--gray-fill)" stroke="var(--gray)"/>
+      </svg>
+      <div><h3>BigQuery</h3><p>Google's <b>serverless</b> engine — no cluster to manage, compute borrowed per-query from a shared pool, and the shuffle middle pulled into its own tier. The most fully disaggregated of the big warehouses.</p></div>
+    </div>
+    <div class="player">
+      <svg width="60" height="44" viewBox="0 0 60 44" aria-hidden="true">
+        <rect x="6" y="4" width="48" height="14" rx="3" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="6" y="26" width="48" height="14" rx="3" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <line x1="30" y1="18" x2="30" y2="26" stroke="var(--soft)" stroke-dasharray="3 3"/>
+      </svg>
+      <div><h3>Databricks</h3><p>Same separated wiring as Snowflake, opposite heritage — born from Spark and data science, betting on <b>open formats</b> (Delta, Iceberg) and the lakehouse. The fight with Snowflake is about openness and workload breadth, not the basic architecture.</p></div>
+    </div>
+    <div class="player">
+      <svg width="60" height="44" viewBox="0 0 60 44" aria-hidden="true">
+        <rect x="6" y="4" width="48" height="14" rx="3" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <rect x="6" y="22" width="48" height="14" rx="3" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="6" y="4" width="48" height="32" rx="3" fill="none" stroke="var(--faint)" stroke-dasharray="3 3"/>
+      </svg>
+      <div><h3>Redshift</h3><p>Amazon's warehouse — born <b>coupled</b> (MPP, storage and compute fused), then retrofitted toward separation to chase Snowflake. The transitional fossil: you can see both eras in it.</p></div>
+    </div>
+    <div class="player">
+      <svg width="60" height="44" viewBox="0 0 60 44" aria-hidden="true">
+        <rect x="13" y="11" width="34" height="11" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="13" y="22" width="34" height="11" fill="var(--teal-fill)" stroke="var(--teal)"/>
+      </svg>
+      <div><h3>DuckDB</h3><p>The single-node revival in one package — an analytical engine that runs <b>in-process</b> on your own machine, storage and compute re-fused, bytes travelling inches. Free, fast, and pointed at the "your data is smaller than you think" thesis.</p></div>
+    </div>
+    <div class="player">
+      <svg width="60" height="44" viewBox="0 0 60 44" aria-hidden="true">
+        <rect x="2" y="14" width="20" height="16" fill="var(--teal-fill)" stroke="var(--teal)"/>
+        <polygon points="27,16 33,22 27,28 21,22" fill="var(--amber-fill)" stroke="var(--amber)"/>
+        <rect x="38" y="6" width="20" height="14" fill="var(--gray-fill)" stroke="var(--gray)"/>
+        <rect x="38" y="24" width="20" height="14" fill="var(--teal-fill)" stroke="var(--teal)"/>
+      </svg>
+      <div><h3>MotherDuck</h3><p>DuckDB stretched into the cloud: a brain on your laptop <b>and</b> one next to cloud storage, with the engine choosing per-query which one should do the reading. A two-node hybrid trying to keep the bytes near while still reaching cloud data.</p></div>
+    </div>
+  </div>
+  <p class="end">A note on the grain: this is the conceptual layer, deliberately. None of it changes which button you press on a given day — but it's the difference between hearing a list of competing logos and seeing one long argument about where to put the brain relative to the bytes. Dates and "who did what first" are kept rough on purpose; the shapes are the durable part. The products keep moving, the two questions don't.</p>
+</div>
+</body>
+</html>
