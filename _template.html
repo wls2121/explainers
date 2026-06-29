@@ -19,6 +19,12 @@
   .figure img, .figure svg, .mermaid { width: 100%; height: auto; }
   p { max-width: 64ch; }
   pre { background:#f1f1f1; padding:14px; border-radius:8px; overflow:auto; font-size:13px; }
+
+  @media (prefers-color-scheme: dark) {
+    :root { --ink:#e7e9ec; --muted:#9aa3ad; --line:#2b313a; --bg:#14171c; --card:#1b1f26; }
+    .figure { background:#fff; }
+    pre { background:#1e2127; color:#e6e6e6; }
+  }
 </style>
 </head>
 <body>

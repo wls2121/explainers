@@ -1,34 +1,30 @@
-# One-time setup + the `pub` alias
+# Setup + how to publish
 
-Do this once. After that, adding an explainer is: say "add to my learning library"
-in Cowork → it writes the page and commits → you run `pub`.
+After the repo exists, adding an explainer is: say "add to my learning library"
+in Cowork → it writes the page → you run the publish command below.
 
-## 1. Make the repo (once)
+## Publishing (every time)
 
-On your Mac, in a terminal:
-
-```bash
-cd "/Users/willstamatis/Documents/Claude/Projects/Weekly Sales Brief/claude-explainers"
-git init
-git add -A
-git commit -m "first explainers"
-```
-
-Create an empty repo on GitHub (personal account) named `explainers`, then:
+One copy-paste line, works from any directory:
 
 ```bash
-git remote add origin git@github.com:YOURNAME/explainers.git
-git branch -M main
-git push -u origin main
+cd "/Users/willstamatis/Documents/Claude/Projects/Weekly Sales Brief/claude-explainers" && git add -A && git commit -m "add explainer" && git push
 ```
 
-Turn on Pages: GitHub → repo → **Settings → Pages → Source: deploy from branch →
-`main` / root → Save.** ~1 min later it's live at
-`https://YOURNAME.github.io/explainers/`.
+That's the whole step. Give Pages ~1 min, then the page is live. (Cowork only
+writes the files — it never runs git, so the publish is always yours.)
 
-## 2. The `pub` alias (once)
+## 1. The repo (already done)
 
-This is the whole "one step." Add it to `~/.zshrc`:
+Done on 2026-06-29 — the repo is live at `github.com/wls2121/explainers`, served at
+`https://wls2121.github.io/explainers/`. Kept here for reference if you ever rebuild:
+`gh repo create explainers --public --source=. --remote=origin --push`, then
+Settings → Pages → deploy from `main` / root.
+
+## 2. Optional: a `pub` shortcut
+
+You don't need this — the publish command above is enough. But if you'd rather type
+three letters, add this to `~/.zshrc`:
 
 ```bash
 echo 'alias pub='"'"'git -C "/Users/willstamatis/Documents/Claude/Projects/Weekly Sales Brief/claude-explainers" add -A && git -C "/Users/willstamatis/Documents/Claude/Projects/Weekly Sales Brief/claude-explainers" commit -m "update explainers" --allow-empty && git -C "/Users/willstamatis/Documents/Claude/Projects/Weekly Sales Brief/claude-explainers" push'"'"'' >> ~/.zshrc

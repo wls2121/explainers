@@ -38,6 +38,14 @@
   .rule{ border:none; border-top:1px solid var(--line); margin:40px 0; }
   .foot{ font-size:13px; color:var(--mut); }
   code{ background:var(--soft); padding:1px 5px; border-radius:4px; font-size:14px; }
+
+  @media (prefers-color-scheme: dark){
+    :root{ --ink:#e7e9ec; --mut:#9aa3ad; --line:#2b313a; --bg:#1b1f26; --soft:#14171c; }
+    .page{ box-shadow:0 1px 3px rgba(0,0,0,.4); }
+    /* keep hand-drawn diagrams on a light figure card so they stay readable */
+    figure{ background:#fff; border-radius:10px; padding:12px 14px;
+            --ink:#1f2937; --mut:#6b7280; --line:#e5e7eb; --soft:#f6f6f4; --bg:#ffffff; }
+  }
 </style>
 </head>
 <body>

@@ -111,6 +111,17 @@
   .schp { background:var(--orch-soft); color:var(--orch); white-space:nowrap; }
   code { font-family:"SF Mono",ui-monospace,monospace; font-size:0.85em; background:var(--code-bg); padding:1px 4px; border-radius:4px; }
   .fedge { stroke:var(--ai); stroke-width:1.8; fill:none; opacity:0.55; marker-end:url(#arrow2); }
+
+  @media (prefers-color-scheme: dark){
+    :root{
+      --artifact-background:#14171c; --artifact-background-light:#1b1f26; --artifact-background-mid:#23272e;
+      --artifact-border-light:#2b313a; --artifact-border-dark:#3a414b;
+      --artifact-text-primary:#e7e9ec; --artifact-text-secondary:#9aa3ad;
+      --ai-soft:#1a1d4d; --tools-soft:#2a3110; --orch-soft:#4a2410;
+      --deliver-soft:#441031; --infra-soft:#24282e; --flow-line:#4a4f57;
+      --code-bg:#1e2127; --code-fg:#e6e6e6;
+    }
+  }
 </style>
 </head>
 <body>

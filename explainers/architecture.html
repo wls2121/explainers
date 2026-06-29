@@ -18,6 +18,11 @@
   .figure { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
   .figure img { width: 100%; height: auto; display: block; }
   p { max-width: 64ch; }
+
+  @media (prefers-color-scheme: dark) {
+    :root { --ink:#e7e9ec; --muted:#9aa3ad; --line:#2b313a; --bg:#14171c; --card:#1b1f26; }
+    .figure { background:#fff; }
+  }
 </style>
 </head>
 <body>
