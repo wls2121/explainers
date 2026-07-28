@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>iPaaS vendors — the map and how they differ</title>
+<style>
+  :root{
+    --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --bg:#ffffff; --card:#f9fafb;
+    --accent:#ff694a;
+    --mule:#00a1e0;  --mule-bg:#e8f7fd;
+    --boomi:#1a936f; --boomi-bg:#e7f5ef;
+    --workato:#7c3aed; --workato-bg:#f1ebfe;
+    --tray:#e11d74;  --tray-bg:#fdeaf2;
+    --fivetran:#c2410c; --fivetran-bg:#fff3ec;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--ink);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       line-height:1.6; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:920px; margin:0 auto; padding:52px 32px 88px}
+  a.back{color:var(--muted); text-decoration:none; font-size:14px; display:inline-block; margin-bottom:20px}
+  a.back:hover{color:var(--accent)}
+  h1{font-size:36px; line-height:1.12; margin:0 0 10px; letter-spacing:-.02em; font-weight:800}
+  .sub{color:var(--muted); font-size:18px; margin:0 0 8px; max-width:70ch}
+  h2{font-size:24px; margin:52px 0 6px; letter-spacing:-.01em; font-weight:800}
+  p{max-width:70ch}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.9em;
+       background:#f3f4f6; padding:1px 6px; border-radius:5px; color:#1f2937}
+  .hr{height:1px; background:var(--line); border:0; margin:44px 0}
+  .figure{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px}
+  .figure svg{width:100%; height:auto; display:block}
+  .figcap{color:var(--muted); font-size:13px; margin:12px 2px 0}
+
+  .vgrid{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:22px 0}
+  .vbox{border:1px solid var(--line); border-left-width:4px; border-radius:0 12px 12px 0;
+        background:var(--card); padding:16px 18px}
+  .vbox h3{margin:0 0 2px; font-size:17px}
+  .vbox .tag{font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted)}
+  .vbox p{font-size:14.5px; margin:8px 0 0; max-width:none}
+  .vbox .y26{font-size:13px; color:var(--muted); margin-top:8px; display:block}
+  .vbox.mule{border-left-color:var(--mule)}    .vbox.mule .tag{color:var(--mule)}
+  .vbox.boomi{border-left-color:var(--boomi)}  .vbox.boomi .tag{color:var(--boomi)}
+  .vbox.workato{border-left-color:var(--workato)} .vbox.workato .tag{color:var(--workato)}
+  .vbox.tray{border-left-color:var(--tray)}    .vbox.tray .tag{color:var(--tray)}
+
+  .takeaway{border-left:4px solid var(--accent); background:var(--card); padding:14px 18px;
+            border-radius:0 10px 10px 0; margin:20px 0; font-size:15.5px; max-width:none}
+  .callout{border:1px solid var(--line); background:var(--card); border-radius:12px; padding:16px 18px; margin:20px 0}
+  .callout .ctag{font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--accent)}
+  .callout p{margin:6px 0 0; font-size:15.5px; max-width:none}
+  .foot{color:var(--muted); font-size:13px; margin-top:52px; border-top:1px solid var(--line); padding-top:16px}
+  @media(max-width:760px){ .vgrid{grid-template-columns:1fr} .wrap{padding:32px 20px} h1{font-size:28px} }
+  @media (prefers-color-scheme: dark){
+    :root{ --ink:#e7e9ec; --muted:#9aa3ad; --line:#2b313a; --bg:#14171c; --card:#1b1f26; }
+    code{background:#252a32; color:#e6e6e6}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../index.html">&larr; All explainers</a>
+  <h1>iPaaS vendors: the map and how they differ</h1>
+  <p class="sub">iPaaS is the glue between business apps — &ldquo;when X happens in app A, do Y in app B.&rdquo; Four vendors own the category, each with a durable point of view. Then there&rsquo;s Fivetran, which people lump in and shouldn&rsquo;t.</p>
+
+  <h2>What iPaaS actually is</h2>
+  <p>iPaaS stands for &ldquo;integration Platform as a Service.&rdquo; Strip the acronym and it&rsquo;s plumbing: software that moves actions between the apps a business already runs. A deal closes in your CRM, so a project spins up in your task tracker, a welcome email fires, and finance gets a heads-up. Nobody copies anything by hand. The platform watches for a trigger and takes the action.</p>
+  <p>The reason it&rsquo;s a category and not a weekend script: every app speaks a slightly different language, breaks in its own way, and changes its API without asking. iPaaS gives you one place to build those connections, watch them run, and fix them when they snap. That&rsquo;s the whole job — connect apps, move actions, keep it running.</p>
+  <p>Where the four vendors split is <em>who they build for</em> and <em>how they think the plumbing should be laid</em>. That&rsquo;s the map.</p>
+
+  <h2>The two axes that separate them</h2>
+  <p>Ignore the feature checklists. Two questions do most of the sorting.</p>
+  <p><strong>Architecture or automation?</strong> One camp thinks the point is a clean, governed foundation — build the connections once, as reusable pieces, so nothing rots into spaghetti. The other camp thinks the point is speed — let a business team wire up &ldquo;when this, do that&rdquo; today, without a project.</p>
+  <p><strong>Developer/architect or business user?</strong> Some tools assume the person building is an engineer who wants control. Others assume it&rsquo;s an ops person in RevOps or finance who wants to ship without filing a ticket.</p>
+  <p>Plot the four on those axes and they land in different corners. That&rsquo;s not marketing — it&rsquo;s who each one was built to serve.</p>
+
+  <div class="figure">
+    <svg viewBox="0 0 900 640" role="img" aria-labelledby="mapttl">
+      <title id="mapttl">Two-axis map: architecture vs automation, developer/architect vs business user. MuleSoft top-left (architecture + developer), Workato bottom-right (automation + business), Boomi center, Tray.ai center developer-leaning. Fivetran shown off to the right as an adjacent category.</title>
+      <defs>
+        <marker id="ah" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#9ca3af"/>
+        </marker>
+      </defs>
+
+      <!-- plot frame -->
+      <rect x="90" y="40" width="560" height="520" rx="10" fill="#ffffff" stroke="#e5e7eb"/>
+      <!-- axes -->
+      <line x1="90" y1="300" x2="650" y2="300" stroke="#d1d5db" stroke-width="1.5" marker-end="url(#ah)"/>
+      <line x1="370" y1="560" x2="370" y2="40" stroke="#d1d5db" stroke-width="1.5" marker-end="url(#ah)"/>
+
+      <!-- axis labels -->
+      <text x="98" y="316" font-size="13" fill="#6b7280" font-family="sans-serif" font-weight="700">business user</text>
+      <text x="560" y="316" font-size="13" fill="#6b7280" font-family="sans-serif" font-weight="700" text-anchor="end">developer / architect</text>
+      <text x="378" y="56" font-size="13" fill="#6b7280" font-family="sans-serif" font-weight="700">architecture</text>
+      <text x="378" y="552" font-size="13" fill="#6b7280" font-family="sans-serif" font-weight="700">automation</text>
+
+      <!-- MuleSoft: architecture + developer (top right) -->
+      <g>
+        <circle cx="545" cy="130" r="13" fill="#00a1e0"/>
+        <text x="565" y="128" font-size="17" font-weight="800" fill="#111827" font-family="sans-serif">MuleSoft</text>
+        <text x="565" y="147" font-size="12.5" fill="#6b7280" font-family="sans-serif">API-led, governed layers</text>
+      </g>
+
+      <!-- Boomi: mid / broad (center, slightly up) -->
+      <g>
+        <circle cx="395" cy="235" r="13" fill="#1a936f"/>
+        <text x="415" y="233" font-size="17" font-weight="800" fill="#111827" font-family="sans-serif">Boomi</text>
+        <text x="415" y="252" font-size="12.5" fill="#6b7280" font-family="sans-serif">broad enterprise suite</text>
+      </g>
+
+      <!-- Tray.ai: mid, developer-leaning (center-right, slightly down) -->
+      <g>
+        <circle cx="500" cy="365" r="13" fill="#e11d74"/>
+        <text x="520" y="363" font-size="17" font-weight="800" fill="#111827" font-family="sans-serif">Tray.ai</text>
+        <text x="520" y="382" font-size="12.5" fill="#6b7280" font-family="sans-serif">composable, embeddable</text>
+      </g>
+
+      <!-- Workato: automation + business (bottom left) -->
+      <g>
+        <circle cx="235" cy="460" r="13" fill="#7c3aed"/>
+        <text x="255" y="458" font-size="17" font-weight="800" fill="#111827" font-family="sans-serif">Workato</text>
+        <text x="255" y="477" font-size="12.5" fill="#6b7280" font-family="sans-serif">recipes for ops teams</text>
+      </g>
+
+      <!-- divider -->
+      <line x1="700" y1="70" x2="700" y2="530" stroke="#e5e7eb" stroke-width="1.5" stroke-dasharray="4 5"/>
+      <text x="710" y="66" font-size="12" fill="#9ca3af" font-family="sans-serif" font-style="italic">adjacent category</text>
+
+      <!-- Fivetran off to the side -->
+      <g>
+        <rect x="712" y="250" width="168" height="120" rx="12" fill="#fff3ec" stroke="#f97316" stroke-width="1.5"/>
+        <circle cx="740" cy="284" r="11" fill="#c2410c"/>
+        <text x="760" y="289" font-size="16" font-weight="800" fill="#111827" font-family="sans-serif">Fivetran</text>
+        <text x="728" y="320" font-size="12" fill="#7c2d12" font-family="sans-serif">Not iPaaS.</text>
+        <text x="728" y="338" font-size="12" fill="#7c2d12" font-family="sans-serif">Automated ELT —</text>
+        <text x="728" y="356" font-size="12" fill="#7c2d12" font-family="sans-serif">data into a warehouse.</text>
+      </g>
+    </svg>
+    <p class="figcap">The four iPaaS vendors on the two axes that matter. Fivetran sits outside the frame on purpose — different verb (covered below).</p>
+  </div>
+
+  <h2>The four vendors, and their durable doctrines</h2>
+  <p>Products ship features every quarter. What&rsquo;s stable is the belief each vendor was built around — that&rsquo;s what predicts how they&rsquo;ll behave five years out.</p>
+
+  <div class="vgrid">
+    <div class="vbox mule">
+      <span class="tag">architecture · developer</span>
+      <h3>MuleSoft</h3>
+      <p><strong>API-led architecture.</strong> Build reusable, governed API layers once — system, then process, then experience — so you&rsquo;re composing tested pieces instead of rewiring point-to-point every time. Point-to-point rots; a governed layer doesn&rsquo;t. Architect- and developer-first, and Salesforce-owned.</p>
+      <span class="y26">2026: Agent Fabric — govern AI agents the same way it governs APIs.</span>
+    </div>
+    <div class="vbox boomi">
+      <span class="tag">broad · enterprise generalist</span>
+      <h3>Boomi</h3>
+      <p><strong>One hybrid suite for everything.</strong> Integration plus API management plus master data management plus B2B, running anywhere via the Atom runtime. The generalist that covers the whole enterprise surface rather than betting on one style. Named a Gartner iPaaS Leader twelve times.</p>
+      <span class="y26">2026: agent lifecycle management; Boomi Connect with 1,000+ MCP tools.</span>
+    </div>
+    <div class="vbox workato">
+      <span class="tag">automation · business</span>
+      <h3>Workato</h3>
+      <p><strong>Business-led automation.</strong> The unit of work is a <em>recipe</em> — &ldquo;when this, do that&rdquo; — built by ops teams, not engineers. Optimized for a RevOps or finance person shipping an automation this afternoon without a dev queue.</p>
+      <span class="y26">2026: Workato One and AgentX agents; Enterprise MCP.</span>
+    </div>
+    <div class="vbox tray">
+      <span class="tag">composable · developer-leaning</span>
+      <h3>Tray.ai</h3>
+      <p><strong>Composable low-code you can embed.</strong> Build flexible integrations and drop them inside your own product. Got to agents early — Merlin Agent Builder, December 2024. Smaller than the big three, a Gartner Visionary, strong on where the category is heading.</p>
+      <span class="y26">2026: agent building baked into the composable core.</span>
+    </div>
+  </div>
+
+  <p>MuleSoft anchors the architecture-plus-developer corner. Workato sits opposite, in automation-plus-business. Boomi spreads across the middle by design — it&rsquo;s the broad suite. Tray.ai lands mid-map, leaning developer. Four corners, four different bets on who&rsquo;s building and why.</p>
+
+  <div class="hr"></div>
+
+  <h2>Same job, four ways to build it</h2>
+  <p>One example beats four here. If each vendor got its own problem, they&rsquo;d all look great — and you&rsquo;d learn nothing about how they differ. Hold the problem fixed and the <em>shape</em> of each build changes. (Fair warning: any single example flatters whoever&rsquo;s doctrine fits it best, so this one is deliberately plain — a job all four can do.)</p>
+
+  <div class="callout">
+    <span class="ctag">The job</span>
+    <p>A new enterprise deal hits <strong>Closed Won</strong> in the CRM. Spin the customer up: create a billing account, open an onboarding project, ping the CSM in chat, and land the account in the warehouse for reporting.</p>
+  </div>
+
+  <div class="vgrid">
+    <div class="vbox mule">
+      <span class="tag">build the layers, then call them</span>
+      <h3>MuleSoft</h3>
+      <p>You don&rsquo;t build &ldquo;the workflow.&rdquo; You wrap each system in a reusable API — a CRM API, a Billing API, a Projects API — then write one process API, <code>onboard-customer</code>, that orchestrates them. Closed Won calls the process. More work upfront; the payoff is the Billing API gets reused by the next ten workflows. Engineers build it, versioned and governed.</p>
+    </div>
+    <div class="vbox boomi">
+      <span class="tag">one process on the canvas</span>
+      <h3>Boomi</h3>
+      <p>Drop a Salesforce trigger on the canvas, map the fields, add connector shapes for billing and projects, branch off to the chat ping. It runs on an Atom, cloud or on-prem. If onboarding also needs to dedupe the customer against a master record or trade an EDI doc with a partner, that&rsquo;s the same suite — no new tool.</p>
+    </div>
+    <div class="vbox workato">
+      <span class="tag">a recipe, built by ops</span>
+      <h3>Workato</h3>
+      <p>Trigger: Opportunity moves to Closed Won. Steps: create the billing customer, create the project, post to Slack. Pre-built connectors, no code, shipped this afternoon by someone in RevOps. Lighter governance, business-owned — speed is the point.</p>
+    </div>
+    <div class="vbox tray">
+      <span class="tag">composable — and embeddable</span>
+      <h3>Tray.ai</h3>
+      <p>Similar low-code build, but the distinctive move is you can drop the flow <em>inside your own product</em>. So a SaaS company lets its customers configure their own &ldquo;when a deal closes, sync my tools.&rdquo; Developer-leaning, and strongest when the automation ships as a feature you sell.</p>
+    </div>
+  </div>
+
+  <div class="takeaway">Same trigger, same end state. MuleSoft builds a governed foundation and calls it. Boomi does it on one canvas and can reach into MDM/B2B if the job grows. Workato ships it today from the business side. Tray.ai builds it to embed. The difference isn&rsquo;t what they can do — it&rsquo;s the shape of the thing you end up owning.</div>
+
+  <div class="hr"></div>
+
+  <h2>Why Fivetran isn&rsquo;t on the map</h2>
+  <p>Fivetran shows up in these conversations, and it doesn&rsquo;t belong. It&rsquo;s a different category doing a different job.</p>
+  <p>Fivetran is automated <strong>ELT</strong> — really EL, since it hands the transform to dbt. It moves data <em>one direction</em>, on a schedule, into a warehouse, so you can run analytics and AI on top. No triggers. No &ldquo;when X, do Y.&rdquo; No actions flowing back out to other apps. It fills a warehouse; it doesn&rsquo;t wire your CRM to your task tracker.</p>
+  <p>Run it against the job above and the seam is obvious. Of the four steps — billing account, onboarding project, chat ping, warehouse — Fivetran touches exactly one: landing the account data in the warehouse. And not on the Closed Won trigger; on its own schedule, as batch EL, for reporting. It can&rsquo;t create the billing account or ping the CSM, because those are actions, and actions aren&rsquo;t what it does. That one overlapping sliver is why people confuse it — and why it&rsquo;s a different category.</p>
+  <div class="takeaway">The clean line: <b>iPaaS moves actions between apps. Fivetran moves data into a warehouse.</b> Different verbs. If someone&rsquo;s comparing Fivetran to Workato, they&rsquo;re comparing a data pipe to a switchboard — the confusion is the category, not the product.</div>
+
+  <p class="foot">Conceptual explainer — public companies and analyst positioning only. Vendor doctrines and 2026 product notes reflect each company&rsquo;s stated direction (MuleSoft Agent Fabric, Boomi Connect / agent lifecycle, Workato One + AgentX, Tray.ai Merlin Agent Builder). Analyst references: Gartner Magic Quadrant for iPaaS. No customer, deal, or internal data.</p>
+</div>
+</body>
+</html>

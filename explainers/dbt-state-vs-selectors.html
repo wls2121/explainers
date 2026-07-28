@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>source_status:fresher+ vs dbt State — Explainer</title>
+<style>
+  :root{
+    --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --bg:#ffffff;
+    --card:#f9fafb;
+    --built:#4338ca;      --built-bg:#eef2ff;  --built-bd:#6366f1;   /* real change → rebuilt */
+    --waste:#c2410c;      --waste-bg:#fff7ed;  --waste-bd:#f97316;   /* fresher+ over-rebuild */
+    --skip:#3f6212;       --skip-bg:#f7fee7;   --skip-bd:#84cc16;    /* dbt State smart skip */
+    --same:#4b5563;       --same-bg:#f3f4f6;   --same-bd:#9ca3af;    /* unchanged */
+    --accent:#4338ca;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1100px; margin:0 auto; padding:56px 40px 80px}
+  h1{font-size:40px; line-height:1.1; margin:0 0 10px; letter-spacing:-.02em; font-weight:800}
+  .sub{color:var(--muted); font-size:18px; margin:0 0 8px; max-width:900px}
+  h2{font-size:26px; margin:56px 0 4px; letter-spacing:-.01em; font-weight:800}
+  .h2num{color:var(--accent)}
+  .secsub{color:var(--muted); font-size:16px; margin:0 0 24px; max-width:920px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.92em;
+       background:#f3f4f6; padding:1px 6px; border-radius:5px; color:#1f2937}
+  .hr{height:1px; background:var(--line); border:0; margin:0}
+
+  /* nodes */
+  .node{
+    border-radius:12px; border:2px solid var(--same-bd); background:var(--same-bg);
+    padding:12px 16px; min-width:130px; text-align:center; position:relative;
+  }
+  .node .name{font-weight:700; font-size:15px; color:var(--ink)}
+  .node .tag{font-size:11px; font-weight:700; letter-spacing:.06em; margin-top:3px; text-transform:uppercase}
+  .cyl{border-radius:26px/14px}
+  .built{border-color:var(--built-bd); background:var(--built-bg)}
+  .built .tag{color:var(--built)}
+  .waste{border-color:var(--waste-bd); background:var(--waste-bg)}
+  .waste .tag{color:var(--waste)}
+  .skip{border-color:var(--skip-bd); background:var(--skip-bg)}
+  .skip .tag{color:var(--skip)}
+  .same .tag{color:var(--same)}
+
+  /* stacked (repeated later that day / many models) */
+  .stack{position:relative}
+  .stack::before,.stack::after{
+    content:""; position:absolute; inset:0; border-radius:12px; border:2px solid var(--skip-bd);
+    background:var(--skip-bg); z-index:-1;
+  }
+  .stack::before{transform:translate(6px,-6px); opacity:.55}
+  .stack::after{transform:translate(12px,-12px); opacity:.3}
+  .stack.wstack::before,.stack.wstack::after{border-color:var(--waste-bd); background:var(--waste-bg)}
+
+  .flow{display:flex; align-items:center; gap:0; flex-wrap:wrap; margin:8px 0}
+  .arrow{color:#9ca3af; font-size:26px; padding:0 12px; flex:0 0 auto}
+  .lane{
+    display:flex; align-items:center; gap:14px; padding:16px 18px; border-radius:14px;
+    border:1px solid var(--line); margin:12px 0; background:#fff;
+  }
+  .lanelabel{flex:0 0 168px; font-weight:700; font-size:14px}
+  .lanelabel .cmd{display:block; font-family:ui-monospace,Menlo,monospace; font-size:12px;
+                  color:var(--muted); font-weight:600; margin-top:3px}
+  .lanelabel .verdict{display:block; font-size:12px; font-weight:800; margin-top:6px; letter-spacing:.03em}
+  .v-waste{color:var(--waste)} .v-skip{color:var(--skip)}
+  .lane.freshlane{background:var(--waste-bg); border-color:var(--waste-bd)}
+  .lane.statelane{background:var(--skip-bg); border-color:var(--skip-bd)}
+  .lane .flow{flex:1 1 auto; margin:0}
+  .lane .node{min-width:112px; padding:9px 12px}
+  .lane .node .name{font-size:13px}
+
+  /* summary cards */
+  .cards{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:22px 0 4px}
+  .cardbox{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px}
+  .cardbox .k{font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em}
+  .cardbox .v{font-size:15px; margin-top:6px}
+  .cardbox .big{font-size:18px; font-weight:800; margin-top:4px}
+  .waste-t{color:var(--waste)} .skip-t{color:var(--skip)} .built-t{color:var(--built)}
+
+  .takeaway{border-left:4px solid var(--accent); background:var(--card); padding:14px 18px;
+            border-radius:0 10px 10px 0; margin:18px 0; font-size:15px}
+  .takeaway b{color:var(--ink)}
+
+  /* two-question header block */
+  .two{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:18px 0}
+  .qbox{border-radius:14px; padding:20px 22px; border:2px solid}
+  .qbox.fresh{border-color:var(--waste-bd); background:var(--waste-bg)}
+  .qbox.state{border-color:var(--skip-bd); background:var(--skip-bg)}
+  .qbox .cmd{font-family:ui-monospace,Menlo,monospace; font-size:13px; font-weight:700}
+  .qbox.fresh .cmd{color:var(--waste)} .qbox.state .cmd{color:var(--skip)}
+  .qbox .q{font-size:20px; font-weight:800; margin:8px 0 6px; letter-spacing:-.01em}
+  .qbox .d{font-size:14px; color:#374151}
+
+  /* legend */
+  .legend{display:flex; gap:26px; flex-wrap:wrap; margin:20px 0 0; font-size:13.5px; color:#374151}
+  .legend span{display:inline-flex; align-items:center; gap:8px}
+  .sw{width:14px; height:14px; border-radius:4px; display:inline-block}
+  .foot{color:var(--muted); font-size:13px; margin-top:56px; border-top:1px solid var(--line); padding-top:16px}
+  a.back{color:var(--muted); text-decoration:none; font-size:14px; display:inline-block; margin-bottom:20px}
+  a.back:hover{color:var(--accent)}
+  /* code panels */
+  .codewrap{margin:18px 0}
+  .codecap{font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase;
+           letter-spacing:.05em; margin:0 0 8px}
+  .code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; line-height:1.65;
+        background:#f6f8fa; color:#1f2937; border:1px solid #e5e7eb; border-radius:12px;
+        padding:14px 16px; overflow-x:auto; margin:0; white-space:pre}
+  .code .cmt{color:#94a3b8; font-style:italic}
+  .code .kw{color:#7c3aed; font-weight:600}
+  .code .fn{color:#0369a1}
+  .code .str{color:#15803d}
+  .code .hl{background:#fef08a; border-radius:3px; padding:0 3px; box-decoration-break:clone}
+  .drow{display:block; margin:0 -16px; padding:0 16px}
+  .drow.del{background:#fee2e2} .drow.add{background:#dcfce7}
+  .codegrid{display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:stretch}
+  .codegrid .code{height:100%}
+  .merge{text-align:center; color:#9ca3af; font-size:14px; font-weight:700; margin:12px 0 10px;
+         letter-spacing:.03em; text-transform:uppercase}
+  .chips{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+  .chip{font-size:13.5px; font-weight:700; border-radius:999px; padding:7px 14px; border:1.5px solid}
+  .chip.no{border-color:var(--waste-bd); background:var(--waste-bg); color:var(--waste)}
+  .chip.yes{border-color:var(--skip-bd); background:var(--skip-bg); color:var(--skip)}
+  .chip.neutral{border-color:var(--built-bd); background:var(--built-bg); color:var(--built)}
+  @media(max-width:820px){ .cards{grid-template-columns:1fr} .two{grid-template-columns:1fr} .codegrid{grid-template-columns:1fr}
+    .lane{flex-direction:column; align-items:stretch} .lanelabel{flex:auto} .wrap{padding:32px 20px} h1{font-size:30px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="../index.html">&larr; All explainers</a>
+  <h1>source_status:fresher+ vs dbt State, visually</h1>
+  <p class="sub">Why a selector can't reproduce the savings in your Cost Insights dashboard — even though both look at the same DAG. Same four scenarios, two lanes each: what the selector does, and what dbt State does.</p>
+
+  <!-- ===== SECTION 0: THE TWO QUESTIONS ===== -->
+  <h2><span class="h2num">1 ·</span> The whole thing in one idea: they ask different questions</h2>
+  <p class="secsub">A selector fires <em>before</em> anything compiles. It can only ask a coarse question about the graph. dbt State asks a precise question about each model's actual output.</p>
+
+  <div class="two">
+    <div class="qbox fresh">
+      <div class="cmd">source_status:fresher+</div>
+      <div class="q">"Did any upstream source get new data?"</div>
+      <div class="d">Yes/no, per source. If yes → rebuild that source's <em>entire</em> downstream chain. It can't know whether the new data changes any model's result, because nothing has compiled yet.</div>
+    </div>
+    <div class="qbox state">
+      <div class="cmd">dbt State</div>
+      <div class="q">"Would rebuilding this model actually change its output?"</div>
+      <div class="d">Per model. It compares compiled code + upstream data state against the last build and skips the model when the result would be byte-identical.</div>
+    </div>
+  </div>
+
+  <div class="takeaway">The number in Cost Insights is <b>exactly the gap between those two questions</b> — every model the selector would have rebuilt that dbt State proved didn't need it.</div>
+
+  <div class="legend">
+    <span><i class="sw" style="background:var(--built-bd)"></i> New data / real change → must rebuild</span>
+    <span><i class="sw" style="background:var(--same-bd)"></i> Source unchanged</span>
+    <span><i class="sw" style="background:var(--waste-bd)"></i> <code>fresher+</code> rebuilds it anyway (wasted)</span>
+    <span><i class="sw" style="background:var(--skip-bd)"></i> dbt State skips it (saved)</span>
+  </div>
+
+  <hr class="hr" style="margin-top:44px">
+
+  <!-- ===== SECTION 2: FILTERED OUT ===== -->
+  <h2><span class="h2num">2 ·</span> Fresh data that never reaches the model</h2>
+  <p class="secsub"><code>stg_orders</code> filters <code>where region = 'US'</code>. Overnight, 40k new <strong>EU</strong> rows land in <code>raw_orders</code>. Source freshness now reports the source as fresher — but the filtered output is identical to yesterday.</p>
+
+  <div class="codewrap">
+    <p class="codecap">models/staging/stg_orders.sql</p>
+    <pre class="code"><span class="kw">select</span>
+    order_id,
+    customer_id,
+    amount
+<span class="kw">from</span> <span class="fn">{{ ref(<span class="str">'raw_orders'</span>) }}</span>
+<span class="hl"><span class="kw">where</span> region = <span class="str">'US'</span></span>   <span class="cmt">-- the 40k new rows are all EU → dropped right here</span></pre>
+    <div class="chips">
+      <span class="chip neutral">ref('raw_orders') → fresher = true</span>
+      <span class="chip no">fresher+ sees the ref only → REBUILD chain</span>
+      <span class="chip yes">dbt State compiles it → same rows → SKIP</span>
+    </div>
+  </div>
+
+  <div class="lane freshlane">
+    <div class="lanelabel">source_status:fresher+<span class="cmd">the selector</span><span class="verdict v-waste">rebuilds all 62 →</span></div>
+    <div class="flow">
+      <div class="node cyl built"><div class="name">raw_orders</div><div class="tag">fresher</div></div>
+      <span class="arrow">→</span>
+      <div class="node waste"><div class="name">stg_orders</div><div class="tag">rebuilt</div></div>
+      <span class="arrow">→</span>
+      <div class="node waste stack wstack"><div class="name">60 downstream</div><div class="tag">all rebuilt</div></div>
+    </div>
+  </div>
+
+  <div class="lane statelane">
+    <div class="lanelabel">dbt State<span class="cmd">the engine</span><span class="verdict v-skip">rebuilds 0 →</span></div>
+    <div class="flow">
+      <div class="node cyl built"><div class="name">raw_orders</div><div class="tag">fresher</div></div>
+      <span class="arrow">→</span>
+      <div class="node skip"><div class="name">stg_orders</div><div class="tag">skipped · output = same</div></div>
+      <span class="arrow">→</span>
+      <div class="node skip stack"><div class="name">60 downstream</div><div class="tag">never fire</div></div>
+    </div>
+  </div>
+
+  <div class="takeaway">The new rows are EU; the filter drops them. dbt State compiles <code>stg_orders</code>, sees the result is byte-identical, and skips it — so nothing downstream runs. The selector has no way to see that: "fresher" is true, so the whole chain rebuilds.</div>
+
+  <hr class="hr" style="margin-top:44px">
+
+  <!-- ===== SECTION 3: RUN IT TWICE ===== -->
+  <h2><span class="h2num">3 ·</span> Run the same job twice with no new data</h2>
+  <p class="secsub">The clearest test. Run your job, then run it again five minutes later — nothing changed upstream in between.</p>
+
+  <div class="codewrap">
+    <pre class="code"><span class="cmt"># selector has no memory of the last run's DATA state</span>
+$ dbt build --select <span class="str">"state:modified+"</span>    <span class="cmt"># run 1  → builds N models</span>
+$ dbt build --select <span class="str">"state:modified+"</span>    <span class="cmt"># run 2  → builds the same N models AGAIN</span>
+
+<span class="cmt"># dbt State tracks shared model-level state across runs</span>
+<span class="cmt"># run 1  → builds N models</span>
+<span class="cmt"># run 2  → 0 models (no upstream source changed → nothing to do)</span></pre>
+  </div>
+
+  <div class="cards">
+    <div class="cardbox" style="border-color:var(--waste-bd)">
+      <div class="k">state:modified+ · Run 1</div>
+      <div class="big waste-t">Rebuilds every modified model</div>
+      <div class="v">The selector has no memory of the last run's <em>data</em> state.</div>
+    </div>
+    <div class="cardbox" style="border-color:var(--waste-bd)">
+      <div class="k">state:modified+ · Run 2</div>
+      <div class="big waste-t">Rebuilds them all again</div>
+      <div class="v">Identical work, identical warehouse bill — for zero new information.</div>
+    </div>
+    <div class="cardbox" style="border-color:var(--skip-bd)">
+      <div class="k">dbt State · Run 2</div>
+      <div class="big skip-t">≈ near-zero</div>
+      <div class="v">Reruns a model only if an upstream source changed since its last build. Nothing changed → nothing runs.</div>
+    </div>
+  </div>
+  <div class="takeaway">Straight from the dbt docs: run <code>state:modified</code> twice and it builds all modified models both times; dbt State only reruns on the second pass if upstream sources actually changed.</div>
+
+  <hr class="hr" style="margin-top:44px">
+
+  <!-- ===== SECTION 4: FAN-OUT ===== -->
+  <h2><span class="h2num">4 ·</span> Fan-out — where the cost gap explodes</h2>
+  <p class="secsub">One <code>events</code> source sits under 200 downstream models and gets a freshness bump every hour, all day.</p>
+
+  <div class="lane freshlane">
+    <div class="lanelabel">source_status:fresher+<span class="verdict v-waste">200 × 24 rebuilds/day</span></div>
+    <div class="flow">
+      <div class="node cyl built"><div class="name">events</div><div class="tag">fresher hourly</div></div>
+      <span class="arrow">→</span>
+      <div class="node waste stack wstack"><div class="name">200 models</div><div class="tag">all rebuilt · every hour</div></div>
+    </div>
+  </div>
+
+  <div class="lane statelane">
+    <div class="lanelabel">dbt State<span class="verdict v-skip">only the few that changed</span></div>
+    <div class="flow">
+      <div class="node cyl built"><div class="name">events</div><div class="tag">fresher hourly</div></div>
+      <span class="arrow">→</span>
+      <div class="node built"><div class="name">~3 models</div><div class="tag">output changed</div></div>
+      <span class="arrow">+</span>
+      <div class="node skip stack"><div class="name">~197 models</div><div class="tag">skipped</div></div>
+    </div>
+  </div>
+
+  <div class="takeaway">The wider and deeper the DAG, the bigger the delta. A selector's cost scales with the <b>size of the subgraph below a fresher source</b>; dbt State's cost scales with <b>what actually changed</b>. That's why the dashboard number is large, not marginal.</div>
+
+  <hr class="hr" style="margin-top:44px">
+
+  <!-- ===== SECTION 5: CODE AXIS ===== -->
+  <h2><span class="h2num">5 ·</span> The code axis: cosmetic edits that aren't real changes</h2>
+  <p class="secsub">An analyst reindents a model, renames a CTE from <code>orders</code> to <code>orders_cte</code>, and adds a comment. Every character of the file changes. Not one character of the <em>result</em> does.</p>
+
+  <div class="codewrap">
+    <div class="codegrid">
+      <div>
+        <p class="codecap">fct_orders.sql — yesterday</p>
+        <pre class="code"><span class="kw">with</span> orders <span class="kw">as</span> (
+    <span class="kw">select</span> * <span class="kw">from</span> <span class="fn">{{ ref(<span class="str">'stg_orders'</span>) }}</span>
+)
+<span class="kw">select</span> order_id, amount <span class="kw">from</span> orders</pre>
+      </div>
+      <div>
+        <p class="codecap">fct_orders.sql — today's commit</p>
+<pre class="code"><span class="drow add"><span class="cmt">-- refactor: readability only</span></span>
+<span class="drow add"><span class="kw">with</span> orders_cte <span class="kw">as</span> (</span>
+<span class="drow del"><span class="kw">with</span> orders <span class="kw">as</span> (</span>
+
+    <span class="kw">select</span> *
+    <span class="kw">from</span> <span class="fn">{{ ref(<span class="str">'stg_orders'</span>) }}</span>
+
+)
+<span class="kw">select</span>
+    order_id,
+    amount
+<span class="kw">from</span> orders_cte</pre>
+      </div>
+    </div>
+
+    <div class="merge">↓ &nbsp; both compile to the exact same logical plan &nbsp; ↓</div>
+
+    <pre class="code"><span class="cmt">-- compiled SQL (what actually runs on the warehouse)</span>
+<span class="kw">select</span> order_id, amount
+<span class="kw">from</span> analytics.stg_orders</pre>
+
+    <div class="chips">
+      <span class="chip no">state:modified : file text differs → REBUILD + downstream</span>
+      <span class="chip yes">dbt State : logical plan identical → SKIP</span>
+    </div>
+  </div>
+
+  <div class="lane freshlane">
+    <div class="lanelabel">state:modified+<span class="verdict v-waste">rebuilds model + downstream</span></div>
+    <div class="flow">
+      <div class="node built"><div class="name">fct_orders.sql</div><div class="tag">whitespace / alias edit</div></div>
+      <span class="arrow">→</span>
+      <div class="node waste"><div class="name">fct_orders</div><div class="tag">rebuilt</div></div>
+      <span class="arrow">→</span>
+      <div class="node waste stack wstack"><div class="name">downstream</div><div class="tag">rebuilt</div></div>
+    </div>
+  </div>
+
+  <div class="lane statelane">
+    <div class="lanelabel">dbt State<span class="verdict v-skip">skips — same logical plan</span></div>
+    <div class="flow">
+      <div class="node built"><div class="name">fct_orders.sql</div><div class="tag">whitespace / alias edit</div></div>
+      <span class="arrow">→</span>
+      <div class="node skip"><div class="name">fct_orders</div><div class="tag">skipped</div></div>
+      <span class="arrow">→</span>
+      <div class="node skip stack"><div class="name">downstream</div><div class="tag">never fire</div></div>
+    </div>
+  </div>
+
+  <div class="takeaway">dbt State has semantic understanding of the SQL — it compares the logical plan, so whitespace, comments, and alias renames don't count as a change. <code>state:modified</code> only checks whether the file's text changed, so it rebuilds. In an active repo, cosmetic churn adds up.</div>
+
+  <hr class="hr" style="margin-top:44px">
+
+  <!-- ===== CLOSING ===== -->
+  <h2><span class="h2num">6 ·</span> Why you can't rebuild this with a selector</h2>
+  <p class="secsub">This is the honest framing for the engineering team — no correctness risk either way, just a big efficiency gap.</p>
+
+  <div class="cards">
+    <div class="cardbox">
+      <div class="k">What selectors detect</div>
+      <div class="v"><b>That</b> something upstream touched the graph — a timestamp moved, a file's text changed. Coarse, and computed before compile.</div>
+    </div>
+    <div class="cardbox">
+      <div class="k">What dbt State detects</div>
+      <div class="v"><b>Whether</b> the model's output would actually differ — compiled code + real upstream data state, per model.</div>
+    </div>
+    <div class="cardbox">
+      <div class="k">The catch</div>
+      <div class="v">A selector runs <b>before</b> any compile or diff. It has nothing to compare against beyond "did a timestamp move," so it must over-rebuild to stay safe.</div>
+    </div>
+  </div>
+
+  <div class="takeaway"><b>Bottom line:</b> <code>source_status:fresher+</code> and <code>state:modified+</code> are blunt triggers. They catch every real change (safe), but over-rebuild by design. dbt State is the only thing that asks "would the output actually differ?" for each model — and the savings you're already seeing is that question, answered a few hundred times a day.</div>
+
+  <p class="foot">Companion visual for the dbt State vs. selector thread. Technical claims verified against the dbt docs: <em>How is dbt State different from using state:modified?</em>, <em>About state-aware orchestration</em>, and <em>Node selector methods</em> (docs.getdbt.com). Color legend: indigo = real change/rebuild required · orange = selector rebuilds it anyway (wasted) · green = dbt State skips it (saved) · gray = unchanged source.</p>
+
+</div>
+</body>
+</html>
