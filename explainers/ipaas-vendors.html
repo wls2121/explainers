@@ -51,7 +51,56 @@
   .callout .ctag{font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--accent)}
   .callout p{margin:6px 0 0; font-size:15.5px; max-width:none}
   .foot{color:var(--muted); font-size:13px; margin-top:52px; border-top:1px solid var(--line); padding-top:16px}
-  @media(max-width:760px){ .vgrid{grid-template-columns:1fr} .wrap{padding:32px 20px} h1{font-size:28px} }
+
+  /* build panels */
+  .build{border:1px solid var(--line); border-top-width:3px; border-radius:12px; padding:18px 20px; margin:18px 0; background:var(--card)}
+  .build.mule{border-top-color:var(--mule)} .build.boomi{border-top-color:var(--boomi)}
+  .build.workato{border-top-color:var(--workato)} .build.tray{border-top-color:var(--tray)}
+  .build .bhead{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:2px}
+  .build .bhead h3{margin:0; font-size:18px}
+  .build .bhead .tag{font-size:11.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em}
+  .build.mule .tag{color:var(--mule)} .build.boomi .tag{color:var(--boomi)}
+  .build.workato .tag{color:var(--workato)} .build.tray .tag{color:var(--tray)}
+  .build .blede{font-size:14.5px; color:var(--muted); margin:2px 0 14px; max-width:none}
+
+  /* code mock */
+  .mock-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;
+    line-height:1.6; background:#0f1722; color:#e6edf3; border-radius:10px; padding:14px 16px;
+    overflow-x:auto; margin:0; white-space:pre}
+  .mock-code .c{color:#7d8ea3; font-style:italic} .mock-code .k{color:#79c0ff}
+  .mock-code .s{color:#7ee787} .mock-code .t{color:#ffa657}
+  .codecap{font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin:0 0 6px}
+  .codepair{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+
+  /* workato recipe */
+  .recipe{max-width:540px}
+  .rstep{display:flex; align-items:center; gap:12px; border:1px solid var(--line); border-radius:10px; padding:10px 14px; background:var(--bg)}
+  .rstep .ic{width:28px; height:28px; border-radius:7px; flex:0 0 auto; display:flex; align-items:center; justify-content:center}
+  .rstep.trigger .ic{background:var(--workato)} .rstep.action .ic{background:#9ca3af}
+  .rstep .rt{font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); display:block}
+  .rstep .rl{font-size:14px; font-weight:600}
+  .rarrow{color:#9ca3af; margin:4px 0 4px 27px; font-size:16px; line-height:1}
+
+  /* boomi canvas */
+  .canvas{display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:16px; border:1px dashed var(--line); border-radius:10px; background:var(--bg)}
+  .cshape{border:1.5px solid var(--boomi); background:var(--boomi-bg); color:#0b3b2c; border-radius:9px; padding:8px 12px; font-size:12.5px; font-weight:700; text-align:center; min-width:74px}
+  .cshape.start{border-radius:22px} .cshape.map,.cshape.dec{background:#fff}
+  .cshape small{display:block; font-weight:600; color:#3f6d5c; font-size:10.5px; margin-top:1px}
+  .cshape.ghost{border-style:dashed; opacity:.65; color:var(--muted); border-color:var(--muted); background:transparent}
+  .carrow{color:#9ca3af; font-size:17px}
+  .cghostrow{display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:10px; font-size:12px; color:var(--muted)}
+
+  /* tray embed */
+  .trayframe{border:1px solid var(--line); border-radius:12px; overflow:hidden; max-width:580px}
+  .traybar{background:#111827; color:#cbd5e1; padding:8px 12px; display:flex; align-items:center; gap:10px}
+  .traybar .dots{display:flex; gap:5px} .traybar .dots i{width:9px; height:9px; border-radius:50%; background:#4b5563}
+  .traybar .url{background:#1f2937; border-radius:6px; padding:3px 12px; color:#94a3b8; font-size:12px}
+  .traybody{padding:16px; background:var(--bg)}
+  .traynodes{display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+  .tnode{border:1.5px solid var(--tray); background:var(--tray-bg); color:#7a0f3d; border-radius:9px; padding:8px 12px; font-size:12.5px; font-weight:700}
+  .traycap{font-size:11.5px; color:var(--muted); margin:10px 2px 0}
+
+  @media(max-width:760px){ .vgrid{grid-template-columns:1fr} .codepair{grid-template-columns:1fr} .wrap{padding:32px 20px} h1{font-size:28px} }
   @media (prefers-color-scheme: dark){
     :root{ --ink:#e7e9ec; --muted:#9aa3ad; --line:#2b313a; --bg:#14171c; --card:#1b1f26; }
     code{background:#252a32; color:#e6e6e6}
@@ -183,30 +232,104 @@
     <p>A new enterprise deal hits <strong>Closed Won</strong> in the CRM. Spin the customer up: create a billing account, open an onboarding project, ping the CSM in chat, and land the account in the warehouse for reporting.</p>
   </div>
 
-  <div class="vgrid">
-    <div class="vbox mule">
-      <span class="tag">build the layers, then call them</span>
-      <h3>MuleSoft</h3>
-      <p>You don&rsquo;t build &ldquo;the workflow.&rdquo; You wrap each system in a reusable API — a CRM API, a Billing API, a Projects API — then write one process API, <code>onboard-customer</code>, that orchestrates them. Closed Won calls the process. More work upfront; the payoff is the Billing API gets reused by the next ten workflows. Engineers build it, versioned and governed.</p>
-    </div>
-    <div class="vbox boomi">
-      <span class="tag">one process on the canvas</span>
-      <h3>Boomi</h3>
-      <p>Drop a Salesforce trigger on the canvas, map the fields, add connector shapes for billing and projects, branch off to the chat ping. It runs on an Atom, cloud or on-prem. If onboarding also needs to dedupe the customer against a master record or trade an EDI doc with a partner, that&rsquo;s the same suite — no new tool.</p>
-    </div>
-    <div class="vbox workato">
-      <span class="tag">a recipe, built by ops</span>
-      <h3>Workato</h3>
-      <p>Trigger: Opportunity moves to Closed Won. Steps: create the billing customer, create the project, post to Slack. Pre-built connectors, no code, shipped this afternoon by someone in RevOps. Lighter governance, business-owned — speed is the point.</p>
-    </div>
-    <div class="vbox tray">
-      <span class="tag">composable — and embeddable</span>
-      <h3>Tray.ai</h3>
-      <p>Similar low-code build, but the distinctive move is you can drop the flow <em>inside your own product</em>. So a SaaS company lets its customers configure their own &ldquo;when a deal closes, sync my tools.&rdquo; Developer-leaning, and strongest when the automation ships as a feature you sell.</p>
+  <div class="build mule">
+    <div class="bhead"><h3>MuleSoft</h3><span class="tag">wrap once · orchestrate</span></div>
+    <p class="blede">You don&rsquo;t build &ldquo;the workflow.&rdquo; You wrap each system as a reusable API — written as a contract — then a short flow calls the pieces. Engineers build it; it&rsquo;s versioned and governed, and the Billing API gets reused by the next ten workflows.</p>
+    <div class="codepair">
+      <div>
+        <p class="codecap">billing-api.raml — the contract, defined once</p>
+        <pre class="mock-code"><span class="c">#%RAML 1.0</span>
+title: Billing API
+<span class="c"># one endpoint, reused everywhere</span>
+/customers:
+  post:                <span class="c"># POST /customers</span>
+    responses:
+      201:             <span class="c"># customer created</span></pre>
+      </div>
+      <div>
+        <p class="codecap">onboard-customer — calls the reusable pieces</p>
+        <pre class="mock-code"><span class="k">&lt;flow</span> name=<span class="s">"onboard-customer"</span><span class="k">&gt;</span>
+  <span class="k">&lt;http:listener</span> path=<span class="s">"/onboard"</span><span class="k">/&gt;</span>  <span class="c">&lt;!-- Closed Won --&gt;</span>
+  <span class="k">&lt;flow-ref</span> name=<span class="s">"billing:createCustomer"</span><span class="k">/&gt;</span>
+  <span class="k">&lt;flow-ref</span> name=<span class="s">"projects:createProject"</span><span class="k">/&gt;</span>
+  <span class="k">&lt;slack:post</span> channel=<span class="s">"#cs"</span><span class="k">/&gt;</span>
+<span class="k">&lt;/flow&gt;</span></pre>
+      </div>
     </div>
   </div>
 
-  <div class="takeaway">Same trigger, same end state. MuleSoft builds a governed foundation and calls it. Boomi does it on one canvas and can reach into MDM/B2B if the job grows. Workato ships it today from the business side. Tray.ai builds it to embed. The difference isn&rsquo;t what they can do — it&rsquo;s the shape of the thing you end up owning.</div>
+  <div class="build workato">
+    <div class="bhead"><h3>Workato</h3><span class="tag">a recipe, built by ops</span></div>
+    <p class="blede">Stack a trigger and a few actions in the builder. Pre-built connectors, no code — someone in RevOps ships it the same afternoon. Business-owned; speed is the point.</p>
+    <div class="recipe">
+      <div class="rstep trigger">
+        <span class="ic"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M13 2 L4 14 h6 l-1 8 9-12 h-6 z" fill="#fff"/></svg></span>
+        <span><span class="rt">Trigger</span><span class="rl">Salesforce · Opportunity &rarr; Stage is Closed Won</span></span>
+      </div>
+      <div class="rarrow">&darr;</div>
+      <div class="rstep action">
+        <span class="ic"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.6" fill="none"/></svg></span>
+        <span><span class="rt">Action</span><span class="rl">Billing · Create customer</span></span>
+      </div>
+      <div class="rarrow">&darr;</div>
+      <div class="rstep action">
+        <span class="ic"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.6" fill="none"/></svg></span>
+        <span><span class="rt">Action</span><span class="rl">Projects · Create onboarding project</span></span>
+      </div>
+      <div class="rarrow">&darr;</div>
+      <div class="rstep action">
+        <span class="ic"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.6" fill="none"/></svg></span>
+        <span><span class="rt">Action</span><span class="rl">Slack · Post to #cs</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="build boomi">
+    <div class="bhead"><h3>Boomi</h3><span class="tag">one process on the canvas</span></div>
+    <p class="blede">Drag connector shapes onto a canvas and wire them left to right. It runs on an Atom, cloud or on-prem. If the job grows into de-duping the customer or trading an EDI doc with a partner, that&rsquo;s the same suite — no new tool.</p>
+    <div class="canvas">
+      <span class="cshape start">Salesforce<small>Closed Won</small></span>
+      <span class="carrow">&rarr;</span>
+      <span class="cshape map">Map<small>fields</small></span>
+      <span class="carrow">&rarr;</span>
+      <span class="cshape">Billing<small>create</small></span>
+      <span class="carrow">&rarr;</span>
+      <span class="cshape">Projects<small>create</small></span>
+      <span class="carrow">&rarr;</span>
+      <span class="cshape dec">Route</span>
+      <span class="carrow">&rarr;</span>
+      <span class="cshape">Slack<small>#cs</small></span>
+    </div>
+    <div class="cghostrow">
+      <span>if it grows:</span>
+      <span class="cshape ghost">MDM de-dupe</span>
+      <span class="carrow">&rarr;</span>
+      <span class="cshape ghost">EDI to partner</span>
+      <span>&mdash; same suite</span>
+    </div>
+  </div>
+
+  <div class="build tray">
+    <div class="bhead"><h3>Tray.ai</h3><span class="tag">composable &mdash; and embeddable</span></div>
+    <p class="blede">Same low-code flow, but it lives <em>inside your own product</em>, so your customers configure their version of it. Developer-leaning, strongest when the automation ships as a feature you sell.</p>
+    <div class="trayframe">
+      <div class="traybar"><span class="dots"><i></i><i></i><i></i></span><span class="url">app.yourproduct.com/automations</span></div>
+      <div class="traybody">
+        <div class="traynodes">
+          <span class="tnode">Deal Closed Won</span>
+          <span class="carrow">&rarr;</span>
+          <span class="tnode">Create billing</span>
+          <span class="carrow">&rarr;</span>
+          <span class="tnode">Create project</span>
+          <span class="carrow">&rarr;</span>
+          <span class="tnode">Slack #cs</span>
+        </div>
+      </div>
+    </div>
+    <p class="traycap">The builder itself is the product surface &mdash; your customer sees this, not you.</p>
+  </div>
+
+  <div class="takeaway">Same trigger, same end state. MuleSoft writes a governed contract and calls it. Workato stacks a recipe an ops team owns. Boomi wires one canvas that can reach into MDM/B2B if the job grows. Tray.ai builds the same flow to embed in a product. The difference isn&rsquo;t what they can do — it&rsquo;s the shape of the thing you end up owning.</div>
 
   <div class="hr"></div>
 
@@ -216,7 +339,7 @@
   <p>Run it against the job above and the seam is obvious. Of the four steps — billing account, onboarding project, chat ping, warehouse — Fivetran touches exactly one: landing the account data in the warehouse. And not on the Closed Won trigger; on its own schedule, as batch EL, for reporting. It can&rsquo;t create the billing account or ping the CSM, because those are actions, and actions aren&rsquo;t what it does. That one overlapping sliver is why people confuse it — and why it&rsquo;s a different category.</p>
   <div class="takeaway">The clean line: <b>iPaaS moves actions between apps. Fivetran moves data into a warehouse.</b> Different verbs. If someone&rsquo;s comparing Fivetran to Workato, they&rsquo;re comparing a data pipe to a switchboard — the confusion is the category, not the product.</div>
 
-  <p class="foot">Conceptual explainer — public companies and analyst positioning only. Vendor doctrines and 2026 product notes reflect each company&rsquo;s stated direction (MuleSoft Agent Fabric, Boomi Connect / agent lifecycle, Workato One + AgentX, Tray.ai Merlin Agent Builder). Analyst references: Gartner Magic Quadrant for iPaaS. No customer, deal, or internal data.</p>
+  <p class="foot">The four build visuals are simplified mockups of each tool&rsquo;s <em>style</em> — the shape of the work, not copy-paste-runnable config. Conceptual explainer — public companies and analyst positioning only. Vendor doctrines and 2026 product notes reflect each company&rsquo;s stated direction (MuleSoft Agent Fabric, Boomi Connect / agent lifecycle, Workato One + AgentX, Tray.ai Merlin Agent Builder). Analyst references: Gartner Magic Quadrant for iPaaS. No customer, deal, or internal data.</p>
 </div>
 </body>
 </html>
