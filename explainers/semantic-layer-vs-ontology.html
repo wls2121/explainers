@@ -171,7 +171,7 @@
   <p>So the analyst does the sensible thing instead: writes the <code>GROUP BY</code> by hand against your trusted <code>fct_orders</code>. That's where trust actually breaks — in two mathematically specific ways.</p>
 
   <h2>3. Ad-hoc fails, part 1: fan-out</h2>
-  <p>Fan-out is what happens when you aggregate a column <em>after</em> a one-to-many join, and the join quietly duplicates your rows before you sum them.</p>
+  <p>Fan-out is what happens when you aggregate a column <em>after</em> a one-to-many join, and the join duplicates your rows before you sum them.</p>
   <p>Two tables. <code>orders</code> (revenue, at order grain) and <code>order_items</code> (many per order):</p>
 
   <div class="grid2">
@@ -213,7 +213,7 @@
     <tr><td>East</td><td>2</td><td class="num">200</td></tr>
     <tr><td>East</td><td>2</td><td class="num">200</td></tr>
   </table>
-  <p>Returns West = 200, East = 600, <span class="wrong">total = 800</span>. Truth is <span class="right">300</span>. Inflated 2.67×, silently, no error, no failed test. Your model was perfect. The <em>question</em> broke it.</p>
+  <p>Returns West = 200, East = 600, <span class="wrong">total = 800</span>. Truth is <span class="right">300</span>. Inflated 2.67×, no error, no failed test. Your model was perfect. The <em>question</em> broke it.</p>
 
   <div class="callout bad">
     <span class="tag">Why refs don't save you</span>
@@ -563,7 +563,7 @@
   <h2>The cheat-sheet answer</h2>
   <div class="callout good">
     <span class="tag">"I already have refs — why a semantic layer?"</span>
-    <p><strong>"Because refs make your <em>tables</em> trustworthy, and a metric isn't a table — it's an aggregation across dimensions chosen at query time. The moment anyone groups or joins your trusted model they're writing SQL you never reviewed, and two specific things break: fan-out silently inflates sums across one-to-many joins, and ratios can't be averaged back together. The semantic layer sits <em>on</em> your existing tables — one YAML description per model, building nothing — and defines each metric once: grain, join paths, numerator/denominator. Then it generates correct SQL on demand, the same way for Looker, Hex, and your agents. It's not more trust in the model. It's trust that survives being queried, and one definition instead of the same metric re-built in four tools that quietly disagree."</strong></p>
+    <p><strong>"Because refs make your <em>tables</em> trustworthy, and a metric isn't a table — it's an aggregation across dimensions chosen at query time. The moment anyone groups or joins your trusted model they're writing SQL you never reviewed, and two specific things break: fan-out inflates sums across one-to-many joins, and ratios can't be averaged back together. The semantic layer sits <em>on</em> your existing tables — one YAML description per model, building nothing — and defines each metric once: grain, join paths, numerator/denominator. Then it generates correct SQL on demand, the same way for Looker, Hex, and your agents. It's not more trust in the model. It's trust that survives being queried, and one definition instead of the same metric re-built in four tools that disagree."</strong></p>
   </div>
   <p class="muted" style="font-size:14.5px">And the ontology follow-on: the semantic layer is the executable core of an ontology — the metrics and the relationships needed to compute them. If a team wants a full reasoning map for AI, what their evaluation is really deciding is whether the semantic layer covers enough of that map to <em>be</em> the ontology, or whether they'll bolt a separate one alongside it. For most teams today, that map can start as an extension of the same git project — which is why it's a question worth engaging, not conceding.</p>
 

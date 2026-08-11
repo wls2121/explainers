@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Why small models are fast — Explainer</title>
+<style>
+  :root { --ink:#1a1a1a; --muted:#6b6b6b; --line:#e6e6e6; --bg:#fafafa; --card:#fff; --accent:#ff694a; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:16px/1.65 ui-sans-serif,-apple-system,system-ui,sans-serif; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 48px 24px 96px; }
+  a.back { color: var(--muted); text-decoration: none; font-size: 14px; }
+  a.back:hover { color: var(--accent); }
+  h1 { font-size: 28px; margin: 18px 0 6px; letter-spacing: -0.02em; }
+  h2 { font-size: 19px; margin: 40px 0 10px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 0 0 32px; }
+  .figure { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .figure img, .figure svg, .mermaid { width: 100%; height: auto; }
+  p { max-width: 68ch; }
+  pre { background:#f1f1f1; padding:14px; border-radius:8px; overflow:auto; font-size:13px; }
+  code { font-size: 0.92em; background: rgba(127,127,127,.13); padding: 1px 5px; border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 600; }
+  td.lab { color: var(--muted); white-space: nowrap; }
+  .note { border-left: 3px solid var(--accent); padding: 10px 14px; margin: 22px 0;
+          background: rgba(255,105,74,.07); border-radius: 0 8px 8px 0; font-size: 14.5px; }
+  .note p { margin: 0; max-width: none; }
+  .srcs { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--line);
+          font-size: 13.5px; color: var(--muted); }
+  .srcs a { color: inherit; }
+  dl.gloss { margin: 20px 0 0; }
+  dl.gloss dt { font-weight: 700; margin-top: 16px; }
+  dl.gloss dd { margin: 3px 0 0; color: var(--muted); max-width: 68ch; }
+  dl.gloss dd em { color: var(--ink); font-style: normal; font-weight: 600; }
+
+  @media (prefers-color-scheme: dark) {
+    :root { --ink:#e7e9ec; --muted:#9aa3ad; --line:#2b313a; --bg:#14171c; --card:#1b1f26; }
+    .figure { background:#13161a; }
+    .figure img, .figure .mermaid { filter: invert(1) hue-rotate(180deg); }
+    pre { background:#1e2127; color:#e6e6e6; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="../index.html">&larr; All explainers</a>
+    <h1>Why small models are fast — and why sparse ones aren&rsquo;t local</h1>
+    <p class="sub">Three different byte counts govern inference speed. They move independently, and almost every explanation collapses them into one.</p>
+
+    <div class="figure">
+<svg viewBox="0 0 900 486" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three bar groups comparing Kimi K3, LFM2.5-2.6B and a dense 70B model across bytes touched per token, bytes resident in memory, and the share of layers holding a KV cache that grows with context.">
+  <rect x="0" y="0" width="900" height="486" rx="10" fill="#0E1729"/>
+
+  <!-- group 1 -->
+  <rect x="16" y="16" width="868" height="140" rx="9" fill="#0C2320" stroke="#34D399" stroke-width="1.2"/>
+  <text x="36" y="45" fill="#34D399" font-family="system-ui,sans-serif" font-size="14" font-weight="700">&#9312;  BYTES OF WEIGHTS TOUCHED PER TOKEN</text>
+  <text x="36" y="63" fill="#8FA0B8" font-family="system-ui,sans-serif" font-size="12">sets tokens per second at batch 1</text>
+  <text x="36" y="95" fill="#8FA0B8" font-family="system-ui,sans-serif" font-size="12.5">Kimi K3</text>
+  <rect x="196" y="84" width="600" height="14" rx="3" fill="#132033"/>
+  <rect x="196" y="84" width="223" height="14" rx="3" fill="#A78BFA"/>
+  <text x="866" y="95" text-anchor="end" fill="#E8EDF5" font-family="system-ui,sans-serif" font-size="12">~52 GB</text>
+  <text x="36" y="119" fill="#8FA0B8" font-family="system-ui,sans-serif" font-size="12.5">LFM2.5&#8209;2.6B</text>
+  <rect x="196" y="108" width="600" height="14" rx="3" fill="#132033"/>
+  <rect x="196" y="108" width="7" height="14" rx="3" fill="#34D399"/>
+  <text x="866" y="119" text-anchor="end" fill="#E8EDF5" font-family="system-ui,sans-serif" font-size="12">~1.6 GB</text>
+  <text x="36" y="143" fill="#64758C" font-family="system-ui,sans-serif" font-size="12.5">dense 70B at FP16</text>
+  <rect x="196" y="132" width="600" height="14" rx="3" fill="#132033"/>
+  <rect x="196" y="132" width="600" height="14" rx="3" fill="#64758C"/>
+  <text x="866" y="143" text-anchor="end" fill="#8FA0B8" font-family="system-ui,sans-serif" font-size="12">~140 GB</text>
+
+  <!-- group 2 -->
+  <rect x="16" y="168" width="868" height="140" rx="9" fill="#0C2438" stroke="#38BDF8" stroke-width="1.2"/>
+  <text x="36" y="197" fill="#38BDF8" font-family="system-ui,sans-serif" font-size="14" font-weight="700">&#9313;  BYTES OF WEIGHTS RESIDENT IN MEMORY</text>
+  <text x="36" y="215" fill="#8FA0B8" font-family="system-ui,sans-serif" font-size="12">decides whether it runs on your machine at all</text>
+  <text x="36" y="247" fill="#8FA0B8" font-family="system-ui,sans-serif" font-size="12.5">Kimi K3</text>
+  <rect x="196" y="236" width="600" height="14" rx="3" fill="#132033"/>
+  <rect x="196" y="236" width="600" height="14" rx="3" fill="#A78BFA"/>
+  <text x="866" y="247" text-anchor="end" fill="#E8EDF5" font-family="system-ui,sans-serif" font-size="12">~1.56 TB</text>
+  <text x="36" y="271" fill="#8FA0B8" font-family="system-ui,sans-serif" font-size="12.5">LFM2.5&#8209;2.6B</text>
+  <rect x="196" y="260" width="600" height="14" rx="3" fill="#132033"/>
+  <rect x="196" y="260" width="5" height="14" rx="3" fill="#34D399"/>
+  <text x="866" y="271" text-anchor="end" fill="#E8EDF5" font-family="system-ui,sans-serif" font-size="12">~1.6 GB</text>
+  <text x="36" y="295" fill="#64758C" font-family="system-ui,sans-serif" font-size="12.5">dense 70B at FP16</text>
+  <rect x="196" y="284" width="600" height="14" rx="3" fill="#132033"/>
+  <rect x="196" y="284" width="54" height="14" rx="3" fill="#64758C"/>
+  <text x="866" y="295" text-anchor="end" fill="#8FA0B8" font-family="system-ui,sans-serif" font-size="12">~140 GB</text>
+
+  <!-- group 3 -->
+  <rect x="16" y="320" width="868" height="140" rx="9" fill="#2A1D07" stroke="#FBBF24" stroke-width="1.2"/>
+  <text x="36" y="349" fill="#FBBF24" font-family="system-ui,sans-serif" font-size="14" font-weight="700">&#9314;  SHARE OF LAYERS HOLDING A CACHE THAT GROWS WITH n</text>
+  <text x="36" y="367" fill="#8FA0B8" font-family="system-ui,sans-serif" font-size="12">sets how badly long context hurts</text>
+  <text x="36" y="399" fill="#8FA0B8" font-family="system-ui,sans-serif" font-size="12.5">Kimi K3</text>
+  <rect x="196" y="388" width="600" height="14" rx="3" fill="#132033"/>
+  <rect x="196" y="388" width="155" height="14" rx="3" fill="#A78BFA"/>
+  <text x="866" y="399" text-anchor="end" fill="#E8EDF5" font-family="system-ui,sans-serif" font-size="12">24 of 93</text>
+  <text x="36" y="423" fill="#8FA0B8" font-family="system-ui,sans-serif" font-size="12.5">LFM2.5&#8209;2.6B</text>
+  <rect x="196" y="412" width="600" height="14" rx="3" fill="#132033"/>
+  <rect x="196" y="412" width="161" height="14" rx="3" fill="#34D399"/>
+  <text x="866" y="423" text-anchor="end" fill="#E8EDF5" font-family="system-ui,sans-serif" font-size="12">8 of 30</text>
+  <text x="36" y="447" fill="#64758C" font-family="system-ui,sans-serif" font-size="12.5">dense 70B at FP16</text>
+  <rect x="196" y="436" width="600" height="14" rx="3" fill="#132033"/>
+  <rect x="196" y="436" width="600" height="14" rx="3" fill="#64758C"/>
+  <text x="866" y="447" text-anchor="end" fill="#8FA0B8" font-family="system-ui,sans-serif" font-size="12">all of them</text>
+
+  <text x="884" y="478" text-anchor="end" fill="#4A5A70" font-family="system-ui,sans-serif" font-size="10.5">&#9312; and &#9313; are computed from published parameter counts and weight precisions; &#9314; counts layers, not bytes</text>
+</svg>
+    </div>
+
+    <h2>The question</h2>
+
+    <p>Two models get called fast, and they have almost nothing in common.</p>
+
+    <p>Kimi K3 is 2.8 trillion parameters. For any given token it activates about 104 billion of them &mdash; 16 of its 896 experts fire, plus the shared and dense components that run every time. So the work per token is a slice of the model rather than the whole thing. It is cheap to serve. You cannot put it on your laptop: the shipped checkpoint is about 1.56&nbsp;TB even with 4-bit weights, and the published floor for running it is a single eight-card Blackwell-class node, or roughly four nodes if you are on 80GB H100s.</p>
+
+    <p>LFM2.5&#8209;2.6B is 2.6 billion parameters and runs every one of them for every token. Quantized to 4 bits it is about 1.6&nbsp;GB, decodes on a CPU or an NPU, and never touches the network.</p>
+
+    <p>Both designs make inference cheaper. They shrink different quantities, and the difference decides whether a model can live on your machine.</p>
+
+    <h2>Two kinds of big number</h2>
+
+    <p>One distinction first, because everything below is a byte count and the counts are easy to mix up.</p>
+
+    <p><strong>Parameters describe the machine.</strong> A parameter is one number the model learned during training. It is fixed afterwards and identical for everyone who runs that model. <em>Weight</em> means the same thing about 99% of the time — strictly it refers to the parameters that multiply an input, as opposed to biases, which get added instead, but most current transformers drop biases entirely and nobody honours the distinction in conversation.</p>
+
+    <p><strong>Tokens describe the material.</strong> A token is a chunk of text, roughly three quarters of a word, mapped to an integer. It is not part of the model. It changes on every request.</p>
+
+    <p>Both get quoted in billions and trillions, and that is the only property they share. Every number in the rest of this page counts one category, the other, or the two multiplied together &mdash; which is also why the list of numbers has three entries and not four.</p>
+
+    <h2>Some geometry first, briefly</h2>
+
+    <p>Once text is inside the model it stops being words. It is a matrix <code>X</code>, one row per token position, each row holding thousands of coordinates. More context means more rows. A wider model means more columns. Retrieval doesn&rsquo;t expand what the model knows; it adds selected rows to the matrix currently on the desk.</p>
+
+    <p>A layer takes those rows and does two things. It measures &mdash; every output coordinate is a dot product against one learned direction, which you can also read as the matrix bending the whole coordinate space. Then it writes a correction back:</p>
+
+    <pre>x&#8467;&#8330;&#8321;  =  x&#8467;  +  &Delta;attention  +  &Delta;MLP</pre>
+
+    <p>Writes are additive. The vector travels a residual stream collecting nudges &mdash; <em>this word refers to that earlier noun</em>, <em>this is probably a physical object</em>, <em>a verb is coming</em>. (Additive is not the same as permanent: later layers can and do write directions that cancel earlier ones.) Attention is how those nudges get sourced from other positions: queries ask, keys advertise, and the softmax over <code>QK&#8868;/&radic;d&#8342;</code> decides how much of each value vector gets blended in.</p>
+
+    <p>At the end, one vector is compared against every vocabulary direction, a token is sampled, and it becomes a new row. Then the whole thing runs again.</p>
+
+    <h2>Where the time actually goes</h2>
+
+    <p>The usual line is that long context is slow because attention is quadratic. That&rsquo;s true eventually and misleading at the lengths most people use.</p>
+
+    <p>Per layer, the attention scores and the value blend cost about <code>2n&sup2;d</code>. The MLP and the Q/K/V/O projections together cost about <code>12nd&sup2;</code>. Set them equal and the crossover lands near <code>n = 6d</code> &mdash; for a model width of 4,096 that&rsquo;s somewhere around 25,000 tokens, not 4,000. Below the crossover the linear-in-<code>n</code> work dominates: at a 2,000-token prompt it&rsquo;s about twelve times the quadratic term, so doubling that prompt costs roughly 2.2&times;, not 4&times;. Above it the quadratic takes over, and at a million tokens it dominates by better than 40:1. That last regime is the one architectures are actually fighting.</p>
+
+    <p>Decoding is a different problem. Reading the whole prompt processes every token in parallel, so there&rsquo;s plenty of arithmetic per byte of weights loaded &mdash; it&rsquo;s compute-bound. Generating one token at a time is not: the hardware streams weights through to produce a single row, then does it again. At batch 1 that&rsquo;s memory-bound, and it&rsquo;s what you feel as tokens per second. Once the context is long enough, reading the cache back costs more than reading the weights, which is the link between the third number below and your token rate.</p>
+
+    <h2>The three numbers</h2>
+
+    <p>So there are three separate byte counts, and they move independently. Each one is the machine, the material, or the product of the two.</p>
+
+    <p><strong>&#9312; Bytes of weights touched per token.</strong> <em>Counts both.</em> Parameters, multiplied by bytes per parameter, per token. This sets decode speed at batch 1, roughly <code>bandwidth &divide; bytes-touched</code>. Shrink it with sparsity, quantization, or a smaller model. It&rsquo;s a roofline sketch rather than a law &mdash; at high batch, decode stops being memory-bound and this matters less.</p>
+
+    <p><strong>&#9313; Bytes of weights that must be resident.</strong> <em>Counts the machine only.</em> Total parameters times bytes per weight, with no reference to what you are asking it to do. This one decides whether the model runs on your hardware at all. Quantization shrinks it. Fewer total parameters shrink it. Sparsity does not &mdash; an expert that fires for one token in fifty still has to sit somewhere the accelerator can reach. Streaming experts from CPU memory or NVMe exists, but every implementation trades the bandwidth back and is treated as experimental, not as a way out of this number.</p>
+
+    <p><strong>&#9314; Bytes of state that grow with the sequence.</strong> <em>Counts the material only.</em> The KV cache, proportional to <code>n &times; (layers that keep one) &times; d&#8342;&#8341;</code>, doubled for K and V and multiplied by batch and bytes per element. The parenthetical is the part that matters here: in a hybrid model most layers may keep no growing cache at all.</p>
+
+    <div class="note">
+      <p>&ldquo;Active parameters&rdquo; is &#9312;. &ldquo;Total parameters&rdquo; is &#9313;. A sparse model is one where those two numbers stop matching &mdash; that gap <em>is</em> the Mixture-of-Experts trick, and it&rsquo;s why such a model can be cheap to serve and still impossible to run locally. So when one source says Kimi K3 is 2.8 trillion parameters and another says 104 billion, neither is wrong. They are quoting different entries from the list above.</p>
+    </div>
+
+    <h2>The two answers</h2>
+
+    <table>
+      <tr><th></th><th>Kimi K3</th><th>LFM2.5&#8209;2.6B</th></tr>
+      <tr><td class="lab">Total parameters</td><td>2.8 trillion</td><td>2.6 billion</td></tr>
+      <tr><td class="lab">Active per token</td><td>~104 billion (16 of 896 experts, plus shared and dense parts)</td><td>all of them</td></tr>
+      <tr><td class="lab">Weights resident</td><td>~1.56&nbsp;TB (MXFP4 checkpoint)</td><td>~1.6&nbsp;GB at Q4, ~5.4&nbsp;GB at BF16</td></tr>
+      <tr><td class="lab">Runs on</td><td>one eight-card Blackwell-class node; ~4 nodes on 80GB H100s</td><td>a phone, a CPU, an NPU</td></tr>
+      <tr><td class="lab">Sequence design</td><td>69 of 93 layers use Kimi Delta Attention (linear); the other 24 are Gated MLA</td><td>22 of 30 layers are gated short convolutions; the other 8 are grouped-query attention</td></tr>
+      <tr><td class="lab">What you give up</td><td>self-hosting on anything short of an enterprise accelerator node</td><td>breadth and reasoning depth</td></tr>
+      <tr><td class="lab">Shrinks</td><td>&#9312; and &#9314;</td><td>&#9312;, &#9313; and &#9314;</td></tr>
+    </table>
+
+    <p>Both companies spent their architecture budget on &#9314;, and both did it the same way: make most layers carry a fixed-size state and leave real attention to a minority. Moonshot runs three linear-attention blocks for every gated-latent one. Liquid runs short convolutions in twenty-two of thirty layers. Neither got there by making ordinary quadratic attention run faster.</p>
+
+    <h2>What this leaves you with</h2>
+
+    <p>The local cheat code is &#9313;, and sparsity does nothing for it. A 2.8T Mixture-of-Experts model is a serving-economics story: it makes tokens cheap for whoever owns the cluster. A 2.6B dense model is a laptop story: it makes tokens free for whoever owns the laptop, at the cost of knowing much less.</p>
+
+    <p>Those are different products that happen to share a benchmark column. If someone tells you a model is fast, the useful follow-up is which of the three numbers they shrank, and what they gave up to do it.</p>
+
+    <h2>Glossary</h2>
+
+    <p>Reference, not prerequisite. The nouns in this field are mostly stable; the counts are where people get misled, so each entry says what is being counted.</p>
+
+    <dl class="gloss">
+      <dt>parameter</dt>
+      <dd>One number the model learned during training. <em>Counted:</em> 2.8 trillion of them in Kimi K3, 2.6 billion in LFM2.5&#8209;2.6B.</dd>
+
+      <dt>weight</dt>
+      <dd>Effectively a synonym for parameter. Strictly, the parameters that multiply an input, as distinct from biases. &ldquo;The weights&rdquo; as a plural noun usually means the shipped file you download.</dd>
+
+      <dt>bias</dt>
+      <dd>A learned number that is added rather than multiplied. Most current transformers omit them, which is why the weight/parameter distinction has stopped mattering.</dd>
+
+      <dt>token</dt>
+      <dd>A chunk of text, roughly three quarters of a word, mapped to an integer. Not part of the model. <em>Watch out:</em> the word is used for three unrelated counts &mdash; the ~200,000 distinct entries in the vocabulary, the couple of thousand in your prompt, and the tens of trillions read during training.</dd>
+
+      <dt>vocabulary</dt>
+      <dd>The full set of distinct tokens the tokenizer knows. Fixed per model. Its size is the number of columns in the final unembedding matrix.</dd>
+
+      <dt>context window</dt>
+      <dd>The maximum number of token positions the model can hold at once. 1M for Kimi K3, 32K for the LFM2 family. Different from training tokens, which is total text ever read.</dd>
+
+      <dt>embedding</dt>
+      <dd>Drifts. Means both the vector that represents a token and the lookup table that produces those vectors. Occasionally also the whole technique.</dd>
+
+      <dt>active vs. total parameters</dt>
+      <dd>In a Mixture-of-Experts model, only some parameters run for any given token. Active governs speed; total governs memory. Quoting one without saying which is the most common way these figures get misreported.</dd>
+
+      <dt>expert</dt>
+      <dd>One of many parallel sub-networks in an MoE layer, of which a router picks a few per token. Kimi K3 fires 16 of 896.</dd>
+
+      <dt>prefill / decode</dt>
+      <dd>Prefill reads the whole prompt in parallel and is compute-bound. Decode emits one token at a time and is memory-bound at batch 1. They have different bottlenecks, so &ldquo;fast&rdquo; usually needs to say which.</dd>
+
+      <dt>KV cache</dt>
+      <dd>The stored key and value vectors for tokens already processed, so they never get recomputed. The only thing here that grows while the model is running.</dd>
+
+      <dt>quantization</dt>
+      <dd>Storing each weight in fewer bits. FP16 is 2 bytes per weight, BF16 the same, MXFP4 and Q4 about half a byte. It shrinks both &#9312; and &#9313; at once, which is why it shows up in every deployment story.</dd>
+
+      <dt>GQA / MLA</dt>
+      <dd>Grouped-query and multi-head latent attention. Both shrink the KV cache by sharing or compressing what gets stored per token, without changing the number of layers that store something.</dd>
+
+      <dt>linear attention</dt>
+      <dd>A family of mechanisms that replaces the growing cache with a fixed-size running state, so cost per token stops depending on how far you are into the sequence. Kimi Delta Attention is one; gated convolutions achieve a similar effect differently.</dd>
+
+      <dt>n and d</dt>
+      <dd><code>n</code> is sequence length, the number of rows in the context matrix. <code>d</code> is model width, the number of columns. <code>d&#8342;</code> is the per-head slice of <code>d</code> used inside one attention head. Nearly every cost in this piece is some product of those two.</dd>
+    </dl>
+
+    <div class="srcs">
+      <strong>Sources.</strong>
+      Kimi K3 architecture and figures &mdash; 2.8T total, ~104B activated per token, 16 of 896 experts, 69 KDA + 24 Gated MLA layers, MXFP4 weights, 1M context, released 16 July 2026 &mdash; from the
+      <a href="https://www.kimi.com/blog/kimi-k3">Moonshot release post</a>,
+      <a href="https://vllm.ai/blog/2026-07-27-k3">vLLM&rsquo;s day-zero support notes</a>,
+      the <a href="https://docs.sglang.io/cookbook/autoregressive/Moonshotai/Kimi-K3">SGLang deployment cookbook</a> (hardware floor), and
+      <a href="https://www.runpod.io/articles/guides/kimi-k3-technical-faq">Runpod&rsquo;s technical FAQ</a>.
+      LFM2 / LFM2.5 architecture, sizes and quantized footprints from Liquid AI&rsquo;s
+      <a href="https://www.liquid.ai/blog/liquid-foundation-models-v2-our-second-series-of-generative-ai-models">LFM2</a> and
+      <a href="https://www.liquid.ai/blog/introducing-lfm2-5-the-next-generation-of-on-device-ai">LFM2.5</a> posts, the
+      <a href="https://arxiv.org/html/2511.23404v1">LFM2 technical report</a>, and the
+      <a href="https://huggingface.co/LiquidAI/LFM2.5-2.6B-GGUF">published GGUF quantizations</a>.
+      Any speed multiplier quoted by either vendor is a vendor claim and has not been independently verified here.
+      The complexity arithmetic is worked from the standard per-layer FLOP counts; the constants matter, which is why the crossover sits near <code>n = 6d</code> rather than <code>n = d</code>.
+    </div>
+  </div>
+</body>
+</html>
