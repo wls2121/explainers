@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>dbt Semantic Layer: logic vs. serving — Explainer</title>
+<style>
+  :root { --ink:#1a1a1a; --muted:#6b6b6b; --line:#e6e6e6; --bg:#fafafa; --card:#fff; --accent:#ff694a;
+          --auth-bg:#e6f1fb; --auth-tx:#0c447c;
+          --compile-bg:#eeedfe; --compile-tx:#3c3489;
+          --serve-bg:#e1f5ee; --serve-tx:#085041;
+          --neutral-bg:#f1efe8; --neutral-tx:#444441; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:16px/1.65 ui-sans-serif,-apple-system,system-ui,sans-serif; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 48px 24px 96px; }
+  a.back { color: var(--muted); text-decoration: none; font-size: 14px; }
+  a.back:hover { color: var(--accent); }
+  h1 { font-size: 28px; margin: 18px 0 6px; letter-spacing: -0.02em; }
+  h2 { font-size: 20px; margin: 40px 0 10px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 0 0 32px; }
+  .figure { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .figure img, .figure .mermaid { width: 100%; height: auto; }
+  .figure svg { width: 100%; height: auto; }
+  p { max-width: 64ch; }
+  .lead { border-left: 3px solid var(--accent); padding-left: 16px; }
+  pre { background:#f1f1f1; padding:14px; border-radius:8px; overflow:auto; font-size:13px; }
+  code { font-family: ui-monospace,"SF Mono",Menlo,Consolas,monospace; }
+  figcaption { color: var(--muted); font-size: 14px; margin: 6px 0 24px; }
+  .legend { display:flex; flex-wrap:wrap; gap:14px; font-size:13px; color:var(--muted); margin:12px 0 24px; }
+  .legend span { display:inline-flex; align-items:center; gap:6px; }
+  .sw { width:11px; height:11px; border-radius:3px; display:inline-block; }
+
+  @media (prefers-color-scheme: dark) {
+    :root { --ink:#e7e9ec; --muted:#9aa3ad; --line:#2b313a; --bg:#14171c; --card:#1b1f26;
+            --auth-bg:#0c447c; --auth-tx:#b5d4f4;
+            --compile-bg:#3c3489; --compile-tx:#cecbf6;
+            --serve-bg:#085041; --serve-tx:#9fe1cb;
+            --neutral-bg:#2c2c2a; --neutral-tx:#d3d1c7; }
+    .figure { background:#13161a; }
+    .figure img, .figure .mermaid { filter: invert(1) hue-rotate(180deg); }
+    pre { background:#1e2127; color:#e6e6e6; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="../index.html">&larr; All explainers</a>
+    <h1>dbt Semantic Layer: logic vs. serving</h1>
+    <p class="sub">Define metrics for free. Pay to serve them to tools. Here&rsquo;s where the line falls.</p>
+
+    <p class="lead">Four pieces. One writes the SQL &mdash; that&rsquo;s MetricFlow, open source, and it runs locally in dbt Core for nothing. The other three carry the request in, run it, and hand the answer back. That&rsquo;s the part you pay for.</p>
+
+    <h2>The path a query takes</h2>
+    <p>When someone drags &ldquo;revenue&rdquo; and &ldquo;region&rdquo; into a dashboard, nobody writes SQL &mdash; it gets generated in the middle.</p>
+
+    <div class="figure">
+      <svg viewBox="0 0 940 320" role="img" aria-labelledby="d-title d-desc" xmlns="http://www.w3.org/2000/svg">
+        <title id="d-title">The dbt Semantic Layer query path</title>
+        <desc id="d-desc">A request travels from a BI tool to the Semantic Layer API, is authenticated at the gateway, compiled to SQL by MetricFlow using the manifest, executed on your warehouse, and the results return to the tool.</desc>
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <g font-family="ui-sans-serif, -apple-system, system-ui, sans-serif">
+          <g>
+            <rect x="20" y="70" width="138" height="64" rx="9" fill="var(--neutral-bg)" stroke="var(--line)"/>
+            <text x="89" y="98" text-anchor="middle" fill="var(--neutral-tx)" font-size="15" font-weight="600">Tool</text>
+            <text x="89" y="118" text-anchor="middle" fill="var(--neutral-tx)" font-size="12.5">Tableau, agent&hellip;</text>
+          </g>
+          <g>
+            <rect x="172" y="70" width="138" height="64" rx="9" fill="var(--neutral-bg)" stroke="var(--line)"/>
+            <text x="241" y="98" text-anchor="middle" fill="var(--neutral-tx)" font-size="15" font-weight="600">API</text>
+            <text x="241" y="118" text-anchor="middle" fill="var(--neutral-tx)" font-size="12.5">JDBC / GraphQL</text>
+          </g>
+          <g>
+            <rect x="324" y="70" width="138" height="64" rx="9" fill="var(--auth-bg)" stroke="var(--line)"/>
+            <text x="393" y="98" text-anchor="middle" fill="var(--auth-tx)" font-size="15" font-weight="600">Gateway</text>
+            <text x="393" y="118" text-anchor="middle" fill="var(--auth-tx)" font-size="12.5">authenticate</text>
+          </g>
+          <g>
+            <rect x="476" y="70" width="138" height="64" rx="9" fill="var(--compile-bg)" stroke="var(--line)"/>
+            <text x="545" y="98" text-anchor="middle" fill="var(--compile-tx)" font-size="15" font-weight="600">MetricFlow</text>
+            <text x="545" y="118" text-anchor="middle" fill="var(--compile-tx)" font-size="12.5">compile SQL</text>
+          </g>
+          <g>
+            <rect x="628" y="70" width="138" height="64" rx="9" fill="var(--serve-bg)" stroke="var(--line)"/>
+            <text x="697" y="98" text-anchor="middle" fill="var(--serve-tx)" font-size="15" font-weight="600">Warehouse</text>
+            <text x="697" y="118" text-anchor="middle" fill="var(--serve-tx)" font-size="12.5">execute</text>
+          </g>
+          <g>
+            <rect x="780" y="70" width="138" height="64" rx="9" fill="var(--neutral-bg)" stroke="var(--line)"/>
+            <text x="849" y="98" text-anchor="middle" fill="var(--neutral-tx)" font-size="15" font-weight="600">Tool</text>
+            <text x="849" y="118" text-anchor="middle" fill="var(--neutral-tx)" font-size="12.5">rows returned</text>
+          </g>
+          <line x1="160" y1="102" x2="170" y2="102" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <line x1="312" y1="102" x2="322" y2="102" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <line x1="464" y1="102" x2="474" y2="102" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <line x1="616" y1="102" x2="626" y2="102" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <line x1="768" y1="102" x2="778" y2="102" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <rect x="452" y="212" width="186" height="58" rx="9" fill="var(--card)" stroke="var(--line)" stroke-dasharray="4 4"/>
+          <text x="545" y="238" text-anchor="middle" fill="var(--muted)" font-size="13" font-family="ui-monospace, monospace">semantic_manifest.json</text>
+          <text x="545" y="257" text-anchor="middle" fill="var(--muted)" font-size="12.5">built once, in Git</text>
+          <line x1="545" y1="210" x2="545" y2="138" stroke="var(--muted)" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#ar)"/>
+          <text x="697" y="160" text-anchor="middle" fill="var(--muted)" font-size="12.5">your compute, your bill</text>
+          <text x="545" y="160" text-anchor="middle" fill="var(--muted)" font-size="12.5">SQL generated here</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="legend">
+      <span><span class="sw" style="background:var(--auth-bg)"></span> authenticate</span>
+      <span><span class="sw" style="background:var(--compile-bg)"></span> compile</span>
+      <span><span class="sw" style="background:var(--serve-bg)"></span> serve / execute</span>
+      <span><span class="sw" style="background:var(--neutral-bg);border:1px solid var(--line)"></span> transport</span>
+    </div>
+
+    <p>Three stops do the work. The gateway authenticates you before any SQL exists. MetricFlow compiles your request into warehouse SQL on the fly, reading the manifest you built in Git. Your warehouse runs it and returns the rows. The rest just carries bytes.</p>
+
+    <h2>Clicks become SQL</h2>
+    <p>The tool sends metrics and dimensions, not tables:</p>
+<pre><code>{
+  query(metrics: ["revenue"], groupBy: ["customer__region"]) {
+    region
+    revenue
+  }
+}</code></pre>
+    <figcaption>The request. It doesn&rsquo;t know your schema.</figcaption>
+
+    <p>MetricFlow reads the manifest, finds the join path from orders to customers, picks the aggregation, and emits SQL in your warehouse&rsquo;s dialect &mdash; written fresh for this request. That&rsquo;s why a table of pre-computed numbers can&rsquo;t stand in: change the slice and the table is wrong.</p>
+<pre><code>select
+  customers.region        as region,
+  sum(orders.amount)      as revenue
+from analytics.orders      as orders
+left join analytics.customers as customers
+  on orders.customer_id = customers.id
+group by 1</code></pre>
+    <figcaption>The compiled SQL.</figcaption>
+
+    <h2>Where thin wins</h2>
+    <p>dbt authenticates the caller, compiles the request to SQL, and routes the result; your warehouse stores and computes everything. For a team already on dbt and a cloud warehouse, that keeps things simple. Metrics read the same tables as every other query, so there&rsquo;s no second copy to sync and no staleness gap. Every query runs in your warehouse, so its row-level security, column masking, and audit logging apply on their own &mdash; to analysts and agents alike. The compute is your warehouse&rsquo;s, which you already run and budget for, so there&rsquo;s no parallel tier to operate. Because dbt writes SQL per request, an agent asking for a slice nobody pre-computed gets an answer instead of a cache miss, and because access is enforced at the warehouse, that agent sees exactly what its role permits rather than whatever a shared token could reach. The tradeoff is latency on repeat queries, which is what caching handles.</p>
+
+    <p>So: define for free in dbt Core, query from the CLI, and pay for the managed endpoint that lets any tool or agent ask for a metric and get the same governed answer &mdash; without seeing your schema or writing SQL.</p>
+  </div>
+</body>
+</html>
