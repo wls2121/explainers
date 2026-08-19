@@ -265,10 +265,10 @@
 
   <g>
     <rect x="27" y="886" width="300" height="72" rx="8" fill="#f3e8ff" stroke="#9333ea" stroke-width="1.5"/>
-    <text x="177" y="906" text-anchor="middle" font-size="12" font-weight="700" fill="#581c87">Notion: Weekly Brief Evals</text>
-    <text x="177" y="923" text-anchor="middle" font-size="10" fill="#6b21a8">ground-truth labels (Quality + root cause)</text>
-    <text x="177" y="938" text-anchor="middle" font-size="10" fill="#6b21a8" font-style="italic">Will writes Fridays → evals/harness.py scores</text>
-    <text x="177" y="952" text-anchor="middle" font-size="9" fill="#9ca3af">meta-audit reads this weekly</text>
+    <text x="177" y="906" text-anchor="middle" font-size="12" font-weight="700" fill="#581c87">brief-feedback/ (markdown)</text>
+    <text x="177" y="923" text-anchor="middle" font-size="10" fill="#6b21a8">one file per correction + INDEX.md</text>
+    <text x="177" y="938" text-anchor="middle" font-size="10" fill="#6b21a8" font-style="italic">skills read the index on every run</text>
+    <text x="177" y="952" text-anchor="middle" font-size="9" fill="#9ca3af">meta-audit graduates repeat items</text>
   </g>
   <g>
     <rect x="357" y="886" width="250" height="72" rx="8" fill="#f3e8ff" stroke="#9333ea" stroke-width="1.5"/>
@@ -288,7 +288,7 @@
     <rect x="200" y="976" width="700" height="76" rx="8" fill="#fafafa" stroke="#525252" stroke-width="1.5"/>
     <text x="550" y="997" text-anchor="middle" font-size="13" font-weight="700" fill="#171717">skills-as-code (private GitHub repo)</text>
     <text x="550" y="1014" text-anchor="middle" font-size="10" fill="#404040">SOURCE OF TRUTH for SKILL.md files · build_skill.sh → .skill zips · upload-and-replace → Cowork</text>
-    <text x="550" y="1029" text-anchor="middle" font-size="10" fill="#404040">evals/harness.py reads Notion Evals → scores briefs · sanitize.py → public toolkit</text>
+    <text x="550" y="1029" text-anchor="middle" font-size="10" fill="#404040">brief-feedback/ INDEX.md feeds skill corrections · sanitize.py → public toolkit</text>
     <text x="550" y="1044" text-anchor="middle" font-size="10" fill="#525252" font-style="italic">Will edits in Claude Code · upload-and-replace lands in Cowork</text>
   </g>
   <text x="415" y="972" font-size="9" fill="#525252">↑ build / upload-and-replace updates skill recipes</text>
