@@ -1,0 +1,6 @@
+{
+  "name": "Shapes of the AI Stack",
+  "description": "An interactive architectural analysis exploring the competing paradigms, semantic axes, negative spaces, and invariants of the modern AI and agent stack compared to the Modern Data Stack.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
