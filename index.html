@@ -31,6 +31,10 @@
     margin-top: 48px; padding: 14px 16px; border-left: 3px solid var(--accent);
     background: #fff5f2; border-radius: 0 8px 8px 0; font-size: 14px; color: #5a3a32;
   }
+  .sectionlabel {
+    margin: 26px 0 -2px; font-size: 12px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted);
+  }
   footer { margin-top: 56px; color: var(--muted); font-size: 13px; }
 
   @media (prefers-color-scheme: dark) {
@@ -45,10 +49,6 @@
     <p class="sub">Conceptual diagrams and walkthroughs. One page each, link-and-go.</p>
 
     <div class="grid">
-      <a class="card" href="explainers/shapes-of-the-ai-stack.html">
-        <h2>Shapes of the AI stack <span style="opacity:.6;font-weight:400">&middot; WIP</span></h2>
-        <p>Six competing architectures for the agent stack, scored across the same layers &mdash; what each one treats as its moat, what it bundles, and what it leaves absent. Plus five invariants that hold across all of them, and where the modern data stack rhymes.</p>
-      </a>
       <a class="card" href="explainers/semantic-layer-logic-vs-serving.html">
         <h2>dbt Semantic Layer: logic vs. serving</h2>
         <p>MetricFlow writes the SQL and it&rsquo;s free; the gateway, API, and endpoint that carry the request are what you pay for. The query path end to end, with the GraphQL request and the SQL it compiles to.</p>
@@ -56,10 +56,6 @@
       <a class="card" href="explainers/why-small-models-are-fast.html">
         <h2>Why small models are fast &mdash; and why sparse ones aren&rsquo;t local</h2>
         <p>Three different byte counts govern inference speed, and they move independently. Enough transformer geometry to see why, then Kimi K3 and Liquid AI&rsquo;s LFM2.5 as opposite answers to the same equation.</p>
-      </a>
-      <a class="card" href="explainers/semantic-layer-vs-ontology.html">
-        <h2>Semantic layer vs. ontology <span style="opacity:.6;font-weight:400">· WIP</span></h2>
-        <p>&ldquo;If refs already give me trusted SQL, why a semantic layer?&rdquo; Fan-out and non-additivity with worked numbers, MetricFlow code, then how ontology and context engineering fit &mdash; and what a real ontology stack is.</p>
       </a>
       <a class="card" href="explainers/ipaas-vendors.html">
         <h2>iPaaS vendors: the map and how they differ</h2>
@@ -85,7 +81,19 @@
         <h2>Reading the shape of the work</h2>
         <p>Why a big &ldquo;models built&rdquo; number can mean opposite things &mdash; breadth &times; fan-out &times; cadence, and which shapes are actually hard to replace.</p>
       </a>
-      <!-- Add a new card per explainer. Copy _template.html into explainers/ and link it here. -->
+
+      <p class="sectionlabel">Work in progress</p>
+
+      <a class="card" href="explainers/shapes-of-the-ai-stack.html">
+        <h2>Shapes of the AI stack <span style="opacity:.6;font-weight:400">&middot; WIP</span></h2>
+        <p>Six competing architectures for the agent stack, scored across the same layers &mdash; what each one treats as its moat, what it bundles, and what it leaves absent. Plus five invariants that hold across all of them, and where the modern data stack rhymes.</p>
+      </a>
+      <a class="card" href="explainers/semantic-layer-vs-ontology.html">
+        <h2>Semantic layer vs. ontology <span style="opacity:.6;font-weight:400">&middot; WIP</span></h2>
+        <p>&ldquo;If refs already give me trusted SQL, why a semantic layer?&rdquo; Fan-out and non-additivity with worked numbers, MetricFlow code, then how ontology and context engineering fit &mdash; and what a real ontology stack is.</p>
+      </a>
+      <!-- Add a new card per explainer. Copy _template.html into explainers/ and link it here.
+           WIP drafts go below the "Work in progress" label. -->
     </div>
 
     <div class="guard">
