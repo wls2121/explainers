@@ -96,6 +96,10 @@ export default function App() {
               Modern AI frameworks have deeply instrumented telemetry but remain blind to business metrics. Bridging data semantics with execution telemetry remains the highest-value frontier.
             </div>
           </div>
+
+          <p className="text-xs italic text-slate-500 dark:text-slate-400 pt-2">
+            Living draft. The six shapes are a snapshot of a fast-moving space — vendors reposition, categories merge, and the scoring here will change with them.
+          </p>
         </div>
       </footer>
     </div>

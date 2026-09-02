@@ -46,11 +46,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* Status System Badge */}
+          {/* Work-in-progress badge */}
           <div className="hidden md:flex items-center gap-3">
-            <div className="flex items-center gap-2 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 rounded-md text-[11px] font-semibold tracking-wide">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              ALL SYSTEMS NOMINAL
+            <div className="flex items-center gap-2 px-2.5 py-1 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80 rounded-md text-[11px] font-semibold tracking-wide">
+              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+              WORK IN PROGRESS
             </div>
           </div>
 
