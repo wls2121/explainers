@@ -14,10 +14,16 @@
   a.back { color: var(--muted); text-decoration: none; font-size: 14px; }
   a.back:hover { color: var(--accent); }
   h1 { font-size: 28px; margin: 18px 0 6px; letter-spacing: -0.02em; }
+  h2 { font-size: 19px; margin: 48px 0 6px; letter-spacing: -0.01em; }
   .sub { color: var(--muted); margin: 0 0 32px; }
   .figure { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
   .figure img { width: 100%; height: auto; display: block; }
+  .caption { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
   p { max-width: 64ch; }
+  table { border-collapse: collapse; margin: 18px 0 0; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 18px 7px 0; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+  code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
 
   @media (prefers-color-scheme: dark) {
     :root { --ink:#e7e9ec; --muted:#9aa3ad; --line:#2b313a; --bg:#14171c; --card:#1b1f26; }
@@ -30,13 +36,36 @@
   <div class="wrap">
     <a class="back" href="../index.html">&larr; All explainers</a>
     <h1>Sales AI stack architecture</h1>
-    <p class="sub">How the pieces fit: scheduled triggers fire skills, skills pull from data sources, outputs land where the team reads them, and human feedback loops back into memory.</p>
+    <p class="sub">A scheduled trigger fires a skill, the skill reads from connectors, the result lands somewhere a person reads it, and a correction gets written down. Drawn twice: once as an inventory, once as the loop it really is.</p>
 
+    <h2>The inventory</h2>
     <div class="figure">
-      <img src="architecture-diagram.svg" alt="DAG of scheduled triggers, skills, data sources, outputs, and feedback loops">
+      <img src="architecture-diagram.svg" alt="Bands of cron triggers, skills, connectors, warehouse marts, outputs and memory, with arrows from each trigger to the skill it fires">
     </div>
+    <p class="caption">Read top to bottom. Each trigger arrow points at the skill it actually fires &mdash; two of them point at the same one. Corrections travel back up the left edge, and they land on the skill, not on the schedule.</p>
 
-    <p>Read it left to right: cron triggers at the top kick off the skills, each skill reads from one or more connectors, the result gets written to an output destination, and corrections flow back into memory so the next run is sharper. Swap in a fresh SVG whenever the architecture changes.</p>
+    <h2>Every source is a connector</h2>
+    <p>Writing down what goes in and out of each source turned up the thing worth knowing: there are no direct API calls here, and nothing reads a file off a disk. Six MCP connectors, and that is the whole surface.</p>
+
+    <table>
+      <tr><th>Source</th><th>Access</th><th>In</th><th>Out</th></tr>
+      <tr><td>Google Calendar</td><td>read + write</td><td>events, attendees, free/busy</td><td>event create + update (rare)</td></tr>
+      <tr><td>Salesforce</td><td>read + write</td><td>SOQL &mdash; opps, accounts, activity</td><td>field updates on opportunities</td></tr>
+      <tr><td>Gong</td><td>read only</td><td>call list, transcripts, users</td><td>&mdash;</td></tr>
+      <tr><td>dbt MCP</td><td>read only</td><td>SQL against the mart layer</td><td>&mdash;</td></tr>
+      <tr><td>Notion</td><td>read + write</td><td>account brain pages</td><td>the brains, one page per account</td></tr>
+      <tr><td>Slack</td><td>read + write</td><td>channels, threads</td><td>direct messages</td></tr>
+    </table>
+
+    <p>Two consequences fall out of that table. <code>dbt MCP</code> is the only route to the warehouse &mdash; there is no second path, so when that connector is down the transcript layer is down with it. And Notion is the only source that is both an input and an output, which is why a bad write to an account brain quietly poisons the next morning's brief rather than failing loudly.</p>
+
+    <h2>The same thing as a loop</h2>
+    <div class="figure">
+      <img src="architecture-loop.svg" alt="Six stages arranged in a ring: schedule, a skill runs, it reads, it writes, a human corrects, it is remembered, with a dashed edge from memory back to the skill">
+    </div>
+    <p class="caption">The dashed edge is the only one that matters. It runs from memory back to stage two &mdash; the recipe &mdash; and not back to stage one. Adding another cron entry does not make the stack better; writing down a correction does.</p>
+
+    <p>The inventory on the first diagram turns over every few weeks. The loop has not changed shape since it was first drawn, and the failure modes listed in the corner of the second diagram are all the same failure: a stage runs and nobody closes it. A connector returning 401 is noisy and gets fixed. A brief nobody opens is silent, and costs more.</p>
   </div>
 </body>
 </html>
