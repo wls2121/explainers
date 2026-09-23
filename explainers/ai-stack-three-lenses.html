@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three lenses on the AI stack</title>
+<meta name="description" content="How sellers, builders, and investors draw the AI stack differently, and the real splits inside each layer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:#F6F8FA; --ink:#1A2230; --muted:#586374; --rule:#D8DEE6; --panel:#FFFFFF;
+  --gtm:#0D6A64; --eng:#3B4DA0; --vc:#8A5712;
+  --serif:"Newsreader", Georgia, serif; --sans:"Public Sans", system-ui, sans-serif;
+}
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior:auto; } }
+body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.6 var(--sans); }
+a { color:inherit; }
+a:focus-visible, button:focus-visible { outline:3px solid var(--eng); outline-offset:3px; border-radius:2px; }
+.wrap { max-width:880px; margin:0 auto; padding:0 24px; }
+.back { display:inline-block; margin-top:28px; color:var(--muted); font-size:14px; text-decoration:none; }
+.back:hover { text-decoration:underline; }
+.hero { padding:40px 0 28px; }
+.hero h1 { font:500 clamp(40px,7vw,68px)/1.02 var(--serif); letter-spacing:-0.015em; margin:0 0 20px; max-width:14ch; }
+.hero p { max-width:62ch; font-size:18px; color:#2E3847; margin:0 0 12px; }
+.hero .dated { font-size:14px; color:var(--muted); }
+.bands { display:grid; grid-template-columns:repeat(3,1fr); gap:0; margin:28px 0 0; border-radius:6px; overflow:hidden; }
+.bands a { padding:16px 18px 18px; color:#fff; text-decoration:none; display:block; }
+.bands a strong { display:block; font:600 20px/1.2 var(--serif); margin-bottom:4px; }
+.bands a span { font-size:14px; opacity:.92; line-height:1.4; display:block; }
+.bands .gtm { background:var(--gtm); } .bands .eng { background:var(--eng); } .bands .vc { background:var(--vc); }
+nav.sticky { position:sticky; top:0; z-index:5; background:rgba(246,248,250,.94); backdrop-filter:blur(6px); border-bottom:1px solid var(--rule); }
+nav.sticky .wrap { display:flex; gap:20px; padding-top:10px; padding-bottom:10px; font-size:14px; flex-wrap:wrap; }
+nav.sticky a { text-decoration:none; color:var(--muted); padding:2px 0; border-bottom:2px solid transparent; }
+nav.sticky a:hover { color:var(--ink); }
+nav.sticky a.on[data-lens=gtm] { color:var(--gtm); border-color:var(--gtm); }
+nav.sticky a.on[data-lens=eng] { color:var(--eng); border-color:var(--eng); }
+nav.sticky a.on[data-lens=vc] { color:var(--vc); border-color:var(--vc); }
+h2 { font:500 32px/1.15 var(--serif); margin:56px 0 12px; }
+.lede { color:#2E3847; max-width:64ch; }
+.tablewrap { overflow-x:auto; margin-top:20px; background:var(--panel); border:1px solid var(--rule); border-radius:6px; }
+table { border-collapse:collapse; width:100%; min-width:640px; font-size:14.5px; }
+th, td { text-align:left; vertical-align:top; padding:12px 14px; border-top:1px solid var(--rule); }
+thead th { border-top:0; font:600 17px/1.2 var(--serif); }
+thead th.gtm { color:var(--gtm); } thead th.eng { color:var(--eng); } thead th.vc { color:var(--vc); }
+tbody th { font-weight:600; color:var(--muted); width:20%; }
+section[id] { scroll-margin-top:56px; }
+.lens { margin-top:64px; padding-top:8px; --c:var(--gtm); }
+.lens[data-lens=eng] { --c:var(--eng); } .lens[data-lens=vc] { --c:var(--vc); }
+.lenshead { border-top:4px solid var(--c); padding-top:18px; }
+.lenshead h3 { font:500 40px/1.1 var(--serif); margin:0; color:var(--c); }
+.lenshead .q { font:italic 400 22px/1.35 var(--serif); margin:6px 0 0; max-width:40ch; }
+.logic { margin-top:18px; max-width:66ch; }
+.logic p { margin:0 0 12px; }
+.note { border-left:3px solid var(--c); padding:10px 16px; background:var(--panel); max-width:66ch; margin:16px 0 0; }
+.order { font-size:13px; color:var(--muted); margin:28px 0 8px; }
+.stack { display:flex; flex-direction:column; gap:10px; }
+.layer { background:var(--panel); border:1px solid var(--rule); border-left:6px solid var(--c); border-radius:4px; padding:18px 20px 16px; }
+.layer header h4 { font:600 21px/1.25 var(--serif); margin:0; }
+.layer .what { margin:2px 0 0; color:var(--muted); font-size:15px; }
+.cos { list-style:none; padding:0; margin:12px 0 0; display:flex; flex-wrap:wrap; gap:6px; }
+.cos li { font-size:13.5px; padding:3px 10px; border-radius:999px; background:color-mix(in srgb, var(--c) 10%, white); color:color-mix(in srgb, var(--c) 80%, black); }
+.fork { margin-top:14px; }
+.forklabel { font:italic 500 15px/1.3 var(--serif); color:var(--c); margin:0 0 8px; }
+.sides { display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+.side { border:1px solid var(--rule); border-radius:4px; padding:10px 12px; position:relative; }
+.sides.n2 { gap:0; border:1px solid var(--rule); border-radius:4px; }
+.sides.n2 .side { border:0; border-radius:0; }
+.sides.n2 .side + .side { border-left:1px dashed color-mix(in srgb, var(--c) 45%, white); }
+.side h5 { margin:0 0 4px; font:600 15px/1.3 var(--sans); }
+.side p { margin:0; font-size:14.5px; line-height:1.5; }
+.stake { margin:12px 0 0; font-size:14.5px; color:#2E3847; max-width:72ch; }
+.railwrap { margin-top:18px; }
+.raillabel { font-size:13px; color:var(--muted); margin:0 0 8px; }
+.layer.rail { border-left-style:double; border-left-width:6px; background:color-mix(in srgb, var(--c) 4%, white); }
+.sources { margin:64px 0 0; padding:24px 0 56px; border-top:1px solid var(--rule); font-size:14px; color:var(--muted); }
+.sources h2 { font-size:22px; margin:0 0 10px; color:var(--ink); }
+.sources ul { padding-left:18px; margin:0; }
+.sources li { margin:3px 0; }
+@media (max-width:640px) {
+  .bands { grid-template-columns:1fr; }
+  .sides.n2 { grid-template-columns:1fr; }
+  .sides.n2 .side + .side { border-left:0; border-top:1px dashed color-mix(in srgb, var(--c) 45%, white); }
+  .lenshead h3 { font-size:32px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../index.html">Learning library</a>
+  <header class="hero">
+    <h1>Three lenses on the AI stack</h1>
+    <p>I kept getting lost in competing pictures of the AI stack, so I drew my own. A seller, an engineer, and an investor should draw it differently, because they're asking different questions. The layers follow from the question.</p>
+    <p>Each layer below shows the real split inside it, framed by that lens's question. Sellers get buyer patterns, engineers get tradeoffs, and investors get bets.</p>
+    <p class="dated">Current as of September 2026. One protocol away from out of date.</p>
+    <div class="bands">
+      <a class="gtm" href="#gtm"><strong>GTM lens</strong><span>How do buyers buy here?</span></a>
+      <a class="eng" href="#eng"><strong>Builder lens</strong><span>What am I trading?</span></a>
+      <a class="vc" href="#vc"><strong>Investor lens</strong><span>What am I underwriting?</span></a>
+    </div>
+  </header>
+</div>
+<nav class="sticky" aria-label="Jump to a lens"><div class="wrap"><a href="#compare" class="navlink" data-lens="compare">Side by side</a><a href="#gtm" class="navlink" data-lens="gtm">GTM lens</a><a href="#eng" class="navlink" data-lens="eng">Builder lens</a><a href="#vc" class="navlink" data-lens="vc">Investor lens</a><a href="#sources" class="navlink" data-lens="src">Sources</a></div></nav>
+<main class="wrap">
+  <section id="compare">
+    <h2>Side by side</h2>
+    <p class="lede">The same companies, cut three ways.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th scope="col"></th><th scope="col" class="gtm">GTM</th><th scope="col" class="eng">Builder</th><th scope="col" class="vc">Investor</th></tr></thead>
+      <tbody><tr><th scope="row">The question it asks</th><td>How do buyers buy at this layer, and where do deals stall?</td><td>What am I trading to get what?</td><td>What am I underwriting, and who ends up buying whom?</td></tr><tr><th scope="row">Who reads it</th><td>Sellers, sales leaders, deployed engineers</td><td>AI engineers, platform teams, architects</td><td>VCs, growth and PE investors, CFOs</td></tr><tr><th scope="row">What each split measures</th><td>How buyers buy</td><td>What engineers trade</td><td>What investors underwrite</td></tr><tr><th scope="row">Retrieval</th><td>Its own layer: real-time external web data</td><td>Split: ingestion at the bottom, retrieval storage in the middle</td><td>Folded into tooling</td></tr><tr><th scope="row">Evals and security</th><td>The buyer&#x27;s harness decides the deal, and you can&#x27;t see inside it</td><td>A rail that runs alongside every layer</td><td>A middleware category at risk of being absorbed</td></tr><tr><th scope="row">Hardware</th><td>Assumed; starts at the labs</td><td>Abstracted into serving runtimes</td><td>The base layer, and the biggest capital bet</td></tr><tr><th scope="row">Layers</th><td>5</td><td>6, plus the rail</td><td>4</td></tr></tbody>
+    </table></div>
+  </section>
+  <section class="lens" id="gtm" data-lens="gtm">
+  <div class="lenshead">
+    <h3>GTM lens</h3>
+    <p class="q">How do buyers buy at this layer, and where do deals stall?</p>
+  </div>
+  <div class="logic"><p>Selling AI infrastructure now means passing a test you can&#x27;t see. The buyer builds an evaluation harness: a repo with production-like data, representative prompts, and the models underneath. They let it run and pick whichever vendor comes out ahead.</p><p>The harness is a fourth party in the deal, next to you, the buyer, and your competitor. Buyers often won&#x27;t let you see inside it, even when they&#x27;re on your side.</p><p>So this lens sorts the stack by buying behavior. It gives retrieval and harnesses their own layers because that&#x27;s where the newest deals get decided.</p></div>
+  <p class="note">The buyer&#x27;s eval harness isn&#x27;t one of the layers. It sits across every infrastructure layer below the apps, and it decides most of these deals.</p>
+  <div class="stack">
+<article class="layer">
+  <header><h4>Vertical and functional apps</h4><p class="what">Domain software sold to a department: legal, finance, clinical, support.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>Harvey</li><li>Rogo</li><li>Profound</li><li>Abridge</li><li>Sierra</li></ul>
+  <div class="fork"><p class="forklabel">Buyers split on</p><div class="sides n2"><div class="side"><h5>Seats</h5><p>Per-user licenses, the SaaS default. The budget is predictable, and the vendor eats the compute cost of its heaviest users.</p></div><div class="side"><h5>Usage or outcomes</h5><p>Price follows what gets done. Sierra charges per resolved conversation, and GitHub Copilot moved to usage billing on June 1, 2026. Price tracks value and compute, but the buyer loses a fixed budget.</p></div></div></div>
+  <p class="stake">The second buying question is whose budget it is: the department that feels the pain, or IT.</p>
+</article>
+<article class="layer">
+  <header><h4>Retrieval and real-time web data</h4><p class="what">Web search, extraction, and research built for agents rather than people.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>Parallel</li><li>Exa</li><li>Tavily (Nebius)</li><li>Firecrawl</li></ul>
+  <div class="fork"><p class="forklabel">Buyers split on</p><div class="sides n2"><div class="side"><h5>Embeddings-first</h5><p>Exa searches by meaning. It offers Find Similar (give it a URL, get related pages back) and keeps its own indexes of people and companies.</p></div><div class="side"><h5>Objective-first</h5><p>Parallel takes a plain-language objective alongside keyword queries, returns excerpts shaped for LLMs, and prices each request by how deep you want it to dig.</p></div></div></div>
+  <p class="stake">The two have converged: both cover search, extraction, research, and monitoring. Each publishes benchmarks it wins, and a third-party test reversed one of them. That&#x27;s why the buyer trusts only their own harness. Tavily was acquired by Nebius in February 2026 and still runs under its own brand.</p>
+</article>
+<article class="layer">
+  <header><h4>Harnesses, gateways, and switchboards</h4><p class="what">The layer that makes models and tools usable inside a company: connectors, routing, and policy.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>Runlayer</li><li>OpenRouter</li><li>Kong</li><li>Portkey</li></ul>
+  <div class="fork"><p class="forklabel">Buyers split on</p><div class="sides n2"><div class="side"><h5>Build time</h5><p>Get the connector right before anything runs. Generate the SDK or MCP server from the API spec. Stainless did this for most of the big labs until Anthropic bought it in May 2026.</p></div><div class="side"><h5>Run time</h5><p>Govern what agents do once they&#x27;re live: which tools they call, what data they touch, what it costs. Gateways like Runlayer and Kong sit here.</p></div></div></div>
+  <p class="stake">It&#x27;s the same split as Chainguard and Wiz in cloud security: prevent problems at build, or catch them at run. The buyers differ too. A gateway is bought centrally by a platform or security team. OpenRouter is bought by one developer with a credit card who wants one key for many models.</p>
+</article>
+<article class="layer">
+  <header><h4>Inference</h4><p class="what">Companies that run models for you and sell the compute.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>Together AI</li><li>Fireworks AI</li><li>Modal</li><li>Baseten</li></ul>
+  <div class="fork"><p class="forklabel">Buyers split on</p><div class="sides n2"><div class="side"><h5>Serverless, per token</h5><p>Pay per token for open models. Bought off a latency benchmark, and swapped out when a better benchmark shows up.</p></div><div class="side"><h5>Dedicated capacity</h5><p>Reserved deployments, or per-second compute for your own code. Signed like infrastructure, with a capacity commitment.</p></div></div></div>
+  <p class="stake">Same layer, very different churn. Per-token customers switch on the next benchmark. Capacity customers renew.</p>
+</article>
+<article class="layer">
+  <header><h4>Foundation model labs</h4><p class="what">Frontier models and reasoning.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>OpenAI</li><li>Anthropic</li><li>Google (Gemini)</li><li>xAI</li></ul>
+  <div class="fork"><p class="forklabel">Buyers split on</p><div class="sides n2"><div class="side"><h5>Direct from the lab</h5><p>New features arrive first, but it&#x27;s a separate contract and a separate security review.</p></div><div class="side"><h5>Through your cloud</h5><p>The same model through Bedrock, Vertex, or Azure. Spend counts against the cloud commit the company has already signed, and procurement is already done.</p></div></div></div>
+  <p class="stake">For many enterprises, the default model is whichever one their existing cloud contract makes easiest to buy.</p>
+</article>
+  </div>
+  
+</section><section class="lens" id="eng" data-lens="eng">
+  <div class="lenshead">
+    <h3>Builder lens</h3>
+    <p class="q">What am I trading to get what?</p>
+  </div>
+  <div class="logic"><p>Engineers debug systems that don&#x27;t give the same answer twice. When an agent fails in production, they need to know which piece failed: a stale document, a bad lookup, a prompt that regressed, or a slow model.</p><p>So this lens breaks the stack into parts you can test and swap on their own. Each layer is a trade, and it&#x27;s usually finer-grained than speed versus cost versus risk.</p></div>
+  
+  <div class="stack">
+<article class="layer">
+  <header><h4>Frontend</h4><p class="what">Where the tokens show up on screen.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>Vercel (Next.js, AI SDK)</li><li>Streamlit</li><li>Gradio</li></ul>
+  <div class="fork"><p class="forklabel">You trade</p><div class="sides n2"><div class="side"><h5>Production UI</h5><p>The Vercel AI SDK on Next.js: streaming, JavaScript, built to face customers.</p></div><div class="side"><h5>Python demo</h5><p>Streamlit (owned by Snowflake) or Gradio: an internal tool in an afternoon. Not built for polish.</p></div></div></div>
+  <p class="stake">Speed to the first demo, against what a customer eventually sees.</p>
+</article>
+<article class="layer">
+  <header><h4>Tool access</h4><p class="what">How agents reach real systems: CRMs, databases, internal APIs.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>Runlayer</li><li>Kong</li><li>MCP servers</li></ul>
+  <div class="fork"><p class="forklabel">You trade</p><div class="sides n2"><div class="side"><h5>Central gateway</h5><p>One place to set policy and log every call. The cost is one more hop, and one more thing that can go down.</p></div><div class="side"><h5>Direct connections</h5><p>Each agent wires up its own tools. Fastest to build, but you get sprawl and no single audit trail.</p></div></div></div>
+  <p class="stake">This is where agents fail in new ways: wrong permissions, runaway tool calls, costs nobody expected.</p>
+</article>
+<article class="layer">
+  <header><h4>Orchestration</h4><p class="what">The control flow: tool-calling loops, state, and handoffs between agents.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>LangGraph</li><li>CrewAI</li><li>LlamaIndex</li><li>OpenAI Agents SDK</li><li>Claude Agent SDK</li></ul>
+  <div class="fork"><p class="forklabel">You trade</p><div class="sides n3"><div class="side"><h5>Explicit graph</h5><p>LangGraph: you draw the control flow, loops included. You can debug it, but you write more code.</p></div><div class="side"><h5>Role-based crews</h5><p>CrewAI: define agents and their roles, then let them work it out. Fast to start, with less control.</p></div><div class="side"><h5>The vendor&#x27;s own loop</h5><p>The model provider&#x27;s agent SDK. The least code of the three. It bets that models keep improving, and it ties you closer to one vendor.</p></div></div></div>
+  <p class="stake">LangGraph graphs can cycle, because agents loop. Calling them DAGs is wrong: a DAG can&#x27;t loop.</p>
+</article>
+<article class="layer">
+  <header><h4>Context and retrieval storage</h4><p class="what">Vector search, keyword search, and graphs that assemble context for the prompt.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>pgvector</li><li>Pinecone</li><li>Qdrant</li><li>Chroma</li><li>turbopuffer</li><li>Neo4j</li></ul>
+  <div class="fork"><p class="forklabel">You trade</p><div class="sides n2"><div class="side"><h5>Vectors in Postgres</h5><p>pgvector: one fewer system to run, and vectors stay consistent with the rows they describe.</p></div><div class="side"><h5>A dedicated engine</h5><p>Pinecone or Qdrant: more scale and better filtering, plus another system to keep in sync.</p></div></div></div>
+  <p class="stake">HNSW is a search algorithm that both sides use, not special hardware. So the real choice is operational. turbopuffer adds a third option: keep vectors in cheap object storage and accept slower cold queries. Neo4j makes relationships explicit, but someone has to build and maintain the graph.</p>
+</article>
+<article class="layer">
+  <header><h4>Model serving</h4><p class="what">The runtimes that turn GPUs into tokens.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>vLLM</li><li>SGLang</li><li>TensorRT-LLM</li><li>Ollama</li></ul>
+  <div class="fork"><p class="forklabel">You trade</p><div class="sides n4"><div class="side"><h5>vLLM</h5><p>The default. The broadest model support, and high throughput from paged memory and continuous batching.</p></div><div class="side"><h5>SGLang</h5><p>Prefix caching pays off when many requests share a long prompt, which is exactly what agents do.</p></div><div class="side"><h5>TensorRT-LLM</h5><p>The most speed on NVIDIA hardware, paid for with portability.</p></div><div class="side"><h5>Ollama</h5><p>One command on a laptop. Not built for many users at once.</p></div></div></div>
+  <p class="stake">Throughput, latency, portability, and convenience rarely come in one package.</p>
+</article>
+<article class="layer">
+  <header><h4>Data ingestion and storage</h4><p class="what">Getting internal data into shape before any model sees it.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>Fivetran</li><li>dbt</li><li>Databricks</li><li>Snowflake</li><li>Unstructured</li></ul>
+  <div class="fork"><p class="forklabel">You trade</p><div class="sides n2"><div class="side"><h5>Lakehouse on open formats</h5><p>Databricks on open table formats like Iceberg. You own the format and can swap query engines, but you run more of it yourself.</p></div><div class="side"><h5>Managed warehouse</h5><p>Snowflake: one vendor runs storage and compute for you.</p></div></div></div>
+  <p class="stake">The two have converged on Iceberg, so the line is blurrier than it was. The trade that holds steady is ELT: land raw data with Fivetran, then transform it in SQL with dbt, with tests and lineage. You give up some freshness to get auditability. Unstructured handles the PDFs and documents that SQL can&#x27;t.</p>
+</article>
+  </div>
+  <div class="railwrap"><p class="raillabel">Alongside every layer</p><article class="layer rail">
+  <header><h4>Observability, evals, and guardrails</h4><p class="what">Runs alongside every layer rather than sitting in the stack. It traces, scores, and alerts.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>Braintrust</li><li>LangSmith</li><li>Arize Phoenix</li><li>Helicone</li></ul>
+  <div class="fork"><p class="forklabel">You trade</p><div class="sides n2"><div class="side"><h5>Eval-first</h5><p>Braintrust meters scores. Its question is &quot;is this change better?&quot; Its Pro plan has unlimited users.</p></div><div class="side"><h5>Trace-first</h5><p>LangSmith meters traces. Its question is &quot;what happened in this request?&quot; It&#x27;s priced per seat, plus usage.</p></div></div></div>
+  <p class="stake">They overlap more than the marketing suggests. Braintrust even ships a wrapper that sends the same traces and evals to both. Arize Phoenix is the pick when open source, OpenTelemetry, or self-hosting matters. Helicone works as a proxy: change one base URL and you&#x27;re done, but it now sits in the path of every request.</p>
+</article></div>
+</section><section class="lens" id="vc" data-lens="vc">
+  <div class="lenshead">
+    <h3>Investor lens</h3>
+    <p class="q">What am I underwriting, and who ends up buying whom?</p>
+  </div>
+  <div class="logic"><p>Investors ask where margin collects and how each company exits. Operational detail rarely changes that answer, so this lens uses fewer, wider layers.</p><p>Each layer is a bet. The clearest evidence for which bets are working is who bought whom.</p></div>
+  
+  <div class="stack">
+<article class="layer">
+  <header><h4>Applications</h4><p class="what">End-user software that owns the workflow and the customer.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>Cursor</li><li>Harvey</li><li>Perplexity</li><li>Midjourney</li></ul>
+  <div class="fork"><p class="forklabel">You underwrite</p><div class="sides n2"><div class="side"><h5>Rent the model</h5><p>Route each task to the cheapest model that can do it, and ride the price drops.</p></div><div class="side"><h5>Own the model</h5><p>Train your own to control cost of goods. Cursor&#x27;s Composer is the example.</p></div></div></div>
+  <p class="stake">Inference sits in cost of goods, so margins start below software norms. ICONIQ projects AI product gross margins around 52% in 2026, up from 41% in 2024, against 75 to 85% for traditional SaaS. The open question is whether that climb continues or the gap is permanent. Midjourney is the counterexample in this lens: it grew without venture money.</p>
+</article>
+<article class="layer">
+  <header><h4>Tooling and middleware</h4><p class="what">The developer middleware used to assemble apps.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>LangChain</li><li>LlamaIndex</li><li>Pinecone</li><li>Weights &amp; Biases</li></ul>
+  <div class="fork"><p class="forklabel">You underwrite</p><div class="sides n2"><div class="side"><h5>Open source first</h5><p>Win developers for free, then charge for the hosted platform. LangChain and LlamaIndex.</p></div><div class="side"><h5>Closed from day one</h5><p>Charge from the first customer and sell the whole workflow. Braintrust.</p></div></div></div>
+  <p class="stake">Is this a company or a feature? The 2026 exits say acquisition by the layer above or below. Stainless went to Anthropic (reported above $300M), which then shut down the hosted product. Tavily went to Nebius ($275M up front, up to $400M on milestones). Weights &amp; Biases went to CoreWeave in 2025.</p>
+</article>
+<article class="layer">
+  <header><h4>Models</h4><p class="what">Closed frontier labs and open-weight models.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>OpenAI</li><li>Anthropic</li><li>Google</li><li>Meta Llama</li><li>Mistral</li><li>DeepSeek</li></ul>
+  <div class="fork"><p class="forklabel">You underwrite</p><div class="sides n2"><div class="side"><h5>Closed frontier</h5><p>Charge a premium for being ahead, and bet the lead lasts long enough to pay back each training run.</p></div><div class="side"><h5>Open weights</h5><p>Give the model away to cheapen what others sell, and make money somewhere else. The old &quot;commoditize your complement&quot; play.</p></div></div></div>
+  <p class="stake">a16z estimates that the cost of inference at a given level of performance falls about 10x a year. The bet is that usage grows faster than prices fall.</p>
+</article>
+<article class="layer">
+  <header><h4>Compute and infrastructure</h4><p class="what">Chips, data centers, and GPU rental.</p></header>
+  <ul class="cos" aria-label="Example companies"><li>NVIDIA</li><li>TSMC</li><li>CoreWeave</li><li>Nebius</li><li>Lambda</li><li>The hyperscalers</li></ul>
+  <div class="fork"><p class="forklabel">You underwrite</p><div class="sides n2"><div class="side"><h5>Asset-light</h5><p>NVIDIA designs the chips and TSMC makes them. It&#x27;s a margin business.</p></div><div class="side"><h5>Asset-heavy</h5><p>Neoclouds buy GPUs, often with debt, and rent them out. It&#x27;s a utilization business, and the valuation turns on how many years a GPU stays useful.</p></div></div></div>
+  <p class="stake">&quot;Pick-and-shovel sellers win regardless&quot; holds for NVIDIA. For neoclouds it depends on utilization, and they&#x27;re buying their way up the stack, as with Nebius and Tavily or CoreWeave and Weights &amp; Biases.</p>
+</article>
+  </div>
+  
+</section>
+  <section class="sources" id="sources">
+    <h2>Sources</h2>
+    <ul><li>Crew podcast: conversation on AI-native selling and eval harnesses</li><li><a href="https://parallel.ai/compare/exa-vs-parallel">Parallel: Exa vs. Parallel comparison</a></li><li><a href="https://exa.ai/versus/parallel">Exa: Exa vs. Parallel</a></li><li><a href="https://parallel.ai/articles/exa-vs-parallel-findall">Parallel: Websets vs. FindAll, including the NewsCatcher benchmark</a></li><li><a href="https://www.anthropic.com/news/anthropic-acquires-stainless">Anthropic acquires Stainless</a></li><li><a href="https://konghq.com/blog/enterprise/anthropic-and-stainless-ai-connectivity">Kong on build-time vs. run-time connectivity</a></li><li><a href="https://www.bloomberg.com/news/articles/2026-02-10/nebius-agrees-to-buy-ai-agent-search-company-tavily-for-275-million">Bloomberg: Nebius to buy Tavily</a></li><li><a href="https://siliconangle.com/2026/02/10/ai-infrastructure-giant-nebius-buys-agentic-search-startup-tavily/">SiliconANGLE: Tavily deal terms</a></li><li><a href="https://www.morphllm.com/comparisons/braintrust-vs-langsmith">Braintrust vs. LangSmith: scores vs. traces</a></li><li><a href="https://braintrust.dev/docs/integrations/sdk-integrations/langsmith">Braintrust: LangSmith integration</a></li><li><a href="https://www.thesaascfo.com/how-to-calculate-the-inference-efficiency-ratio/">ICONIQ and Bessemer AI margin data, via The SaaS CFO</a></li><li><a href="https://avanteventures.com/en/library/ai-startup-gross-margin-benchmark-2026">a16z LLMflation estimate, via Avante Ventures</a></li><li><a href="https://www.thesaasacademy.com/blog/how-ai-changes-saas-pnl-gross-margin">GitHub Copilot usage billing, via The SaaS Academy</a></li></ul>
+    <p>Vendor comparisons come from the vendors themselves and are marked as such. Prices are published list prices as of mid-2026.</p>
+  </section>
+</main>
+<script>
+(function(){
+  var links=[].slice.call(document.querySelectorAll('nav.sticky .navlink'));
+  var ids=['compare','gtm','eng','vc','sources'];
+  if(!('IntersectionObserver' in window)) return;
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){
+      links.forEach(function(a){ a.classList.toggle('on', a.getAttribute('href')==='#'+e.target.id); });
+    }});
+  },{rootMargin:'-45% 0px -50% 0px'});
+  ids.forEach(function(i){ var el=document.getElementById(i); if(el) io.observe(el); });
+})();
+</script>
+</body>
+</html>
